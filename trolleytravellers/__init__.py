@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from trolleytravellers.config import Config
+from flask_marshmallow import Marshmallow
 
 #Create instance of database
 db = SQLAlchemy()
@@ -14,6 +15,9 @@ def create_app(config_class=Config):
 
     #use init_app to pass in app to extension initialisation
     db.init_app(app)
+
+    # Instantiate Marshmallow for JSON parsing from models
+    ma = Marshmallow(app)
     
     from trolleytravellers.main.routes import main
     from trolleytravellers.user_customer.routes import user_customer
@@ -28,5 +32,4 @@ def create_app(config_class=Config):
     app.register_blueprint(main)
     app.register_blueprint(errors)
    
-    
     return app
