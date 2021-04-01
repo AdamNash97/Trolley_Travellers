@@ -1,13 +1,3 @@
-# from flask import Flask
-# app = Flask(__name__)
-
-# @app.route("/")
-# def home():
-#     return "<h1>Home Page</h1>"
-
-# if __name__ == '__main__':
-#     app.run(debug=True)
-
 from trolleytravellers import create_app
 #Call create app function
 app = create_app()
