@@ -77,8 +77,8 @@ class Customer(db.Model):
     username = db.Column(db.String(40), unique = True, nullable = False)
     password = db.Column(db.String(40), nullable = False)
     postcode = db.Column(db.String(40), nullable = False)
-    housenumber = db.Column(db.String(4), nullable = False)
-    order_list = db.Column(db.String(1000), nullable = True)
+    house_number = db.Column(db.String(4), nullable = False)
+    #order_list = db.Column(db.String(1000), nullable = True)
     # order = db.relationship("Order", foreign_keys='Order.order')
 
 class Volunteer(db.Model):
@@ -88,19 +88,19 @@ class Volunteer(db.Model):
     username = db.Column(db.String(40), unique = True, nullable = False)
     password = db.Column(db.String(40), nullable = False)
     postcode = db.Column(db.String(40), nullable = False)
-    housenumber = db.Column(db.String(4), nullable = False)
+    house_number = db.Column(db.String(4), nullable = False)
 
-    customer_housenumber = db.Column(db.Integer, db.ForeignKey('customer.housenumber'))
-    customer_postcode = db.Column(db.String(40), db.ForeignKey("customer.postcode"))
-    customer_order_list = db.Column(db.String(1000), db.ForeignKey('customer.order_list'))
-    customer_order_date = db.Column(db.String(40), db.ForeignKey("order.order_date"))  
+    # customer_house_number = db.Column(db.Integer, db.ForeignKey('customer.house_number'))
+    # customer_postcode = db.Column(db.String(40), db.ForeignKey("customer.postcode"))
+    # customer_order_list = db.Column(db.String(1000), db.ForeignKey('customer.order_list'))
+    # customer_order_date = db.Column(db.String(40), db.ForeignKey("order.order_date"))  
 
 class Order(db.Model):
     #__tablename__ = 'order'
     id = db.Column(db.Integer, primary_key = True)
     order = db.Column(db.String(1000))
     order_date = db.Column(db.Integer, nullable = False)
-    customer_housenumber = db.Column(db.Integer, db.ForeignKey('customer.housenumber'))
+    customer_house_number = db.Column(db.Integer, db.ForeignKey('customer.house_number'))
     customer_postcode = db.Column(db.String(40), db.ForeignKey("customer.postcode"))
 
 #SCHEMA################################################################ 
@@ -117,6 +117,15 @@ class VolunteerSchema(ma.SQLAlchemyAutoSchema):
 class OrderSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Order
+
+# Initalisation of Schema
+customer_schema = CustomerSchema(many=True)
+volunteer_schema = VolunteerSchema(many=True)
+
+# # require initialisation for either scenario i.e. if single product is wanted by geriatric or greater than one product. 
+# Order_schema = OrderSchema(strict=True)
+# Orders_schema = OrdersSchema(strict=True)
+
 
 # class ShoppingListSchema(ma.SQLAlchemyAutoSchema):
 #     class Meta:
