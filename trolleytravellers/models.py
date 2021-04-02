@@ -10,7 +10,7 @@ class Customer(db.Model):
     postcode = db.Column(db.String(40), nullable = False)
     housenumber = db.Column(db.String(4), nullable = False)
     # Pseudo-column
-    orders = db.relationship("Order", back_populates="customers")
+    orders = db.relationship("Order", back_populates="customer")
 
 
 class Volunteer(db.Model):
@@ -22,7 +22,7 @@ class Volunteer(db.Model):
     postcode = db.Column(db.String(40), nullable = False)
     housenumber = db.Column(db.String(4), nullable = False)
     # Pseudo-column
-    shoppinglists = db.relationship("ShoppingList", back_populates="volunteers")
+    shoppinglists = db.relationship("ShoppingList", back_populates="volunteer")
 
 
 class Order(db.Model):
@@ -32,8 +32,8 @@ class Order(db.Model):
     orderdate = db.Column(db.Integer)
     customer_postcode = db.Column(db.String)
     # Pseudo-columns
-    customers = db.relationship("Customer", back_populates="orders")
-    shoppinglists = db.relationship("ShoppingList", back_populates="orders")
+    customers = db.relationship("Customer", back_populates="order")
+    shoppinglists = db.relationship("ShoppingList", back_populates="order")
 
 
 class ShoppingList(db.Model):
@@ -43,9 +43,9 @@ class ShoppingList(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
     quantity = db.Column(db.Integer)
     # Pseudo-columns
-    volunteers = db.relationship("Volunteer", back_populates="shoppinglists")
-    orders = db.relationship("Order", back_populates="shoppinglists")
-    products = db.relationship("Product", back_populates="shoppinglists")
+    volunteers = db.relationship("Volunteer", back_populates="shoppinglist")
+    orders = db.relationship("Order", back_populates="shoppinglist")
+    products = db.relationship("Product", back_populates="shoppinglist")
     
 
 class Product(db.Model):
@@ -57,8 +57,8 @@ class Product(db.Model):
     price = db.Column(db.Integer)
     status = db.Column(db.String)
     # Pseudo-columns
-    shoppinglists = db.relationship("ShoppingList", back_populates="products")
-    supermarkets = db.relationship("Supermarket", back_populates="products")
+    shoppinglists = db.relationship("ShoppingList", back_populates="product")
+    supermarkets = db.relationship("Supermarket", back_populates="product")
 
     
 class Supermarket(db.Model):
@@ -67,7 +67,7 @@ class Supermarket(db.Model):
     name = db.Column(db.String)
     postcode = db.Column(db.String)
     # Pseudo-column
-    supermarkets = db.relationship("Product", back_populates="supermarkets")
+    supermarkets = db.relationship("Product", back_populates="supermarket")
 
     ################################################################ Marshmallow Schema
 
