@@ -3,19 +3,14 @@
 class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///site.db'
 
-#Create database in terminal:
+#Create database and add data in terminal:
 #'python'
 #'from trolleytravellers import db, create_app'
-#'db.create_all(app=create_app())'
-#The above code creates a 'site.db' in the trolleytravellers package.
-#We can add all tables to this one database.
-
-#Start by importing all models in models.py (not done yet), then add all data manually. 
-#Run the following code in the terminal to do so:
-#The code blow is just an example of creating a customer in the database.
-#WE NEED TO DISCUSS THE ORDERS ATTRIBUTE ON CUSTOMER CLASS, NOT SURE IT WILL WORK!
-#'from trolleytravellers import Customer, Volunteer, Order, ShoppingList, Product, Supermarket'
-#'customer_1 = Customer(email='adam@demo.com', username='adam', password='password', postcode='ST34QX',housenumber='99', orders=[])'
-#'db.session.add(customer_1)'
-#Now commit the changes to the database:
+#'app = create_app()'
+#'app.app_context().push()'
+#'from trolleytravellers.models import Customer, Volunteer, Order'
+#'db.create_all()'
+#'customer_1 = Customer(email='adam@demo.com', username='adam', password='password', postcode='ST34QX',housenumber='99', order_list='bread')'
+#'customer_2 = Customer(email='saif@demo.com', username='saif', password='passwor', postcode='ST25TY',housenumber='56', order_list='milk') ' 
+#'db.session.add_all([customer_1, customer_2])'
 #'db.session.commit()'
