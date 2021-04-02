@@ -5,3 +5,5 @@ app = create_app()
 #Can now run just using: 'python run.py'
 if __name__ == '__main__':
     app.run(debug=True)
+#To activate the v_env:
+#'. ./trolleytravellers_env/Scripts/activate'
