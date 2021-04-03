@@ -42,6 +42,8 @@ class Order(db.Model):
 
     def __init__(self, order=None):
         self.order = order
+        self.order_date = order_date
+        self.customer_house_number = order
 
 #SCHEMA################################################################ 
 #Create Marshmallow Schema (JSON Serialisable objects that are a mixture of python dictionaries and lists)
@@ -61,7 +63,7 @@ class OrderSchema(ma.SQLAlchemyAutoSchema):
 # Initalisation of Schema
 customer_schema = CustomerSchema(many=True)
 volunteer_schema = VolunteerSchema(many=True)
-#Orders_schema = OrderSchema(many=True)
+orders_schema = OrderSchema(many=True)
 
 # # require initialisation for either scenario i.e. if single product is wanted by geriatric or greater than one product. 
 # Order_schema = OrderSchema(strict=True)

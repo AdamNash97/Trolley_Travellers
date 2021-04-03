@@ -1,71 +1,92 @@
 from flask import Blueprint
 from flask import jsonify, abort, request
-#from functools import wraps
-from trolleytravellers.models import Order
+from trolleytravellers.models import Customer, CustomerSchema
 
 user_customer = Blueprint('user_customer', __name__)
 
-@user_customer.route('/product', methods=['get'])
-def get_product():
-    products = Order.query.all()
-    return jsonify({
-        'success': True,
-        'products': [product.short() for product in products]
-    })
+@user_customer.route('/customer_list', methods=['GET'])
+def list_customers():
+    customers = Customer.query.all()
+    customer_schema = CustomerSchema(many=True)
+    output = customer_schema.dump(customers)
+    return jsonify({'customer' : output})
 
-@user_customer.route('/product', methods=['POST'])
-def new_product():
+@user_customer.route('/single_customer/<id>', methods=['GET'])
+def list_customer(id):
     try:
-        jsonBody = request.get_json()
-        id = jsonBody.get('id')
-        price = jsonBody.get('price')
-        quantity = jsonBody.get('quan')
-        name = jsonBody.get('des')
-        #image_link = jsonBody.get('picUrl')
-        product = Order(id=id, price=price, quantity=quantity, name=name, image_link=image_link)
-        product.insert()
-        return jsonify({'success': True})
+        customer = Customer.query.get(id)
+        customer_schema = CustomerSchema()
+        return customer_schema.jsonify({customer})
+    except:
+        abort(404)
+
+@user_customer.route('/add_customer', methods=['POST'])
+def new_customer():
+    try:
+        email_data = request.json['email']
+        username_data = request.json['username']
+        password_data = request.json['password']
+        postcode_data = request.json['postcode']
+        house_number_data = request.json['house_number']
+        new_customer = Customer(email=email_data, username=username_data, password=password_data, postcode=postcode_data, house_number=house_number_data)
+        db.session.add(new_customer)
+        db.session.commit()
+        customer_schema = CustomerSchema()
+        return customer_schema.jsonify(new_customer)
     except:
          abort(400)
 
-@user_customer.route('/product/<id>', methods=['DELETE'])
-def delete_product(id):
-    product = Order.query.get(id)
-    if product is None:
-        abort(404)
-    product.delete()
-    return jsonify({'success': True})
-
-@user_customer.route('/product', methods=['PATCH'])
-def edit_product():
+@user_customer.route('/add_multiple_customers', methods=['POST'])
+def new_customers():
     try:
         jsonBody = request.get_json()
-        id = jsonBody.get('id')
-        product = Order.query.get(id)
-        if product is None:
-            abort(404)
+        for json_object in jsonBody:
+            email_data = json_object.get('email')
+            username_data = json_object.get('username')
+            password_data = json_object.get('password')
+            postcode_data = json_object.get('postcode')
+            house_number_data = json_object.get('house_number')
+            new_customer = Customer(email=email_data, username=username_data, password=password_data, postcode=postcode_data, house_number=house_number_data)
+            db.session.add(new_customer)
+            db.session.commit()
+            customer_schema = CustomerSchema()
+            customer_schema.jsonify(new_customer)
+        return jsonify({'# customers in database' : new_customer.id})
+    except:
+         abort(400)
 
-        price = jsonBody.get('price')
-        print(price)
-        if price:
-            product.price=price
+@user_customer.route('/update_customer<id>', methods=['POST'])
+def update_customer(id):
+    try:
+        customer = Customer.query.get(id)
+        email_data = request.json['email']
+        username_data = request.json['username']
+        password_data = request.json['password']
+        postcode_data = request.json['postcode']
+        house_number_data = request.json['house_number']
 
-        quantity = jsonBody.get('quan')
-        if quantity:
-            product.quantity=quantity
+        customer.email = email_data
+        customer.username = username_data
+        customer.password = password_data
+        customer.postcode = postcode_data
+        customer.house_number = house_number_data
+       
+        db.session.commit()
 
-        name = jsonBody.get('des')
-        if name:
-            product.name=name
+        customer_schema = CustomerSchema()
+        return customer_schema.jsonify(customer)
+    except:
+         abort(404)
 
-        image_link = jsonBody.get('picUrl')
-        if image_link:
-            product.image_link=image_link
-
-        product.update()
-        return jsonify({'success': True})
+@user_customer.route('/delete_customer/<id>', methods=['DELETE'])
+def delete_customer(id):
+    try:
+        customer = Customer.query.get(id)
+        db.session.delete(customer)
+        db.session.commit()
+        customer_schema = CustomerSchema()
+        return customer_schema.jsonify({customer})
     except:
         abort(404)
 
-
-    
+        
