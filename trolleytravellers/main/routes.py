@@ -55,6 +55,40 @@ def new_customers():
     except:
          abort(400)
 
+@main.route('/update_customer<id>', methods=['POST'])
+def update_customer(id):
+    try:
+        customer = Customer.query.get(id)
+        email_data = request.json['email']
+        username_data = request.json['username']
+        password_data = request.json['password']
+        postcode_data = request.json['postcode']
+        house_number_data = request.json['house_number']
+
+        customer.email = email_data
+        customer.username = username_data
+        customer.password = password_data
+        customer.postcode = postcode_data
+        customer.house_number = house_number_data
+       
+        db.session.commit()
+
+        customer_schema = CustomerSchema()
+        return customer_schema.jsonify(customer)
+    except:
+         abort(404)
+
+@main.route('/delete_customer/<id>', methods=['DELETE'])
+def delete_customer(id):
+    try:
+        customer = Customer.query.get(id)
+        db.session.delete(customer)
+        db.session.commit()
+        customer_schema = CustomerSchema()
+        return customer_schema.jsonify({customer})
+    except:
+        abort(404)
+
 @main.route('/volunteer_list', methods=['GET'])
 def list_volunteers():
     volunteers = Volunteer.query.all()
@@ -87,6 +121,29 @@ def new_volunteer():
     except:
          abort(400)
 
+@main.route('/update_volunteer<id>', methods=['POST'])
+def update_volunteer(id):
+    try:
+        volunteer = Volunteer.query.get(id)
+        email_data = request.json['email']
+        username_data = request.json['username']
+        password_data = request.json['password']
+        postcode_data = request.json['postcode']
+        house_number_data = request.json['house_number']
+
+        volunteer.email = email_data
+        volunteer.username = username_data
+        volunteer.password = password_data
+        volunteer.postcode = postcode_data
+        volunteer.house_number = house_number_data
+       
+        db.session.commit()
+
+        volunteer_schema = VolunteerSchema()
+        return volunteer_schema.jsonify(volunteer)
+    except:
+         abort(404)
+
 @main.route('/add_multiple_volunteers', methods=['POST'])
 def new_volunteers():
     try:
@@ -105,6 +162,17 @@ def new_volunteers():
         return jsonify({'# volunteers in database' : new_volunteer.id})
     except:
          abort(400)
+
+@main.route('/delete_volunteer/<id>', methods=['DELETE'])
+def delete_volunteer(id):
+    try:
+        volunteer = Volunteer.query.get(id)
+        db.session.delete(volunteer)
+        db.session.commit()
+        volunteer_schema = VolunteerSchema()
+        return volunteer_schema.jsonify({volunteer})
+    except:
+        abort(404)
 
 
 
