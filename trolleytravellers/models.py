@@ -1,4 +1,4 @@
-from trolleytravellers import db, ma
+from trolleytravellers import db, ma 
 
 class Customer(db.Model):
     #__tablename__ = 'customer'
@@ -52,8 +52,26 @@ class Order(db.Model):
         self.order_date = order_date
         self.customer_house_number = order
 
-    def __repr__Order(self):
+    def __repr__(self):
         return f"Order('{self.order}', '{self.order_date}', '{self.customer_house_number}')"
+
+    
+class Product(db.Model):
+    #__tablename__ = 'order'
+    id = db.Column(db.Integer, primary_key=True)
+    price = db.Column(db.Integer)
+    name = db.Column(db.String())
+    quantity = db.Column(db.Integer)
+
+    def __init__(self,price, name, quantity):
+        self.price = price
+        self.name = name
+        self.quantity = quantity
+
+    def __repr__(self):
+        return f"Product('{self.price}', '{self.name}', '{self.quantity}')"
+
+
 
 #SCHEMA################################################################ 
 #Create Marshmallow Schema (JSON Serialisable objects that are a mixture of python dictionaries and lists)

@@ -52,7 +52,10 @@ def find_volunteer_match(customer):
     matched_volunteer = Volunteer.query.get(matched_volunteer_id)
     
     return matched_volunteer
-   
 
     #Alternative, definitely easier option, for finding matched customer (found after all the effort made for the above):
     #postcode_matches = db.execute('SELECT id, email, username, postcode FROM volunteer WHERE postcode=customer_postcode')
+
+
+
+
