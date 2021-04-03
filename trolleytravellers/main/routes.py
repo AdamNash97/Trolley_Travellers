@@ -11,6 +11,15 @@ def list_customers():
     output = customer_schema.dump(customers)
     return jsonify({'customer' : output})
 
+@main.route('/single_customer/<id>', methods=['GET'])
+def list_customer(id):
+    try:
+        customer = Customer.query.get(id)
+        customer_schema = CustomerSchema()
+        return customer_schema.jsonify({customer})
+    except:
+        abort(404)
+
 @main.route('/add_customer', methods=['POST'])
 def new_customer():
     try:
@@ -52,6 +61,15 @@ def list_volunteers():
     volunteer_schema = VolunteerSchema(many=True)
     output = volunteer_schema.dump(volunteers)
     return jsonify({'volunteer' : output})
+
+@main.route('/single_volunteer/<id>', methods=['GET'])
+def list_volunteer(id):
+    try:
+        volunteer = Volunteer.query.get(id)
+        volunteer_schema = VolunteerSchema()
+        return volunteer_schema.jsonify({volunteer})
+    except:
+        abort(404)
 
 @main.route('/add_volunteer', methods=['POST'])
 def new_volunteer():
