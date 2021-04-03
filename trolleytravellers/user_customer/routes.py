@@ -1,5 +1,5 @@
-from flask import Blueprint
-from flask import jsonify, abort, request
+from flask import Blueprint, jsonify, request, abort
+from trolleytravellers import db
 from trolleytravellers.models import Customer, CustomerSchema
 
 user_customer = Blueprint('user_customer', __name__)
