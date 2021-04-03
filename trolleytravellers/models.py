@@ -16,6 +16,9 @@ class Customer(db.Model):
         self.postcode = postcode
         self.house_number = house_number 
 
+    def __repr__(self):
+        return f"Customer('{self.email}', '{self.username}', '{self.password}', '{self.postcode}', '{self.house_number}')"
+
 class Volunteer(db.Model):
     #__tablename__ = 'volunteer'
     id = db.Column(db.Integer, primary_key = True)
@@ -32,6 +35,10 @@ class Volunteer(db.Model):
         self.postcode = postcode
         self.house_number = house_number 
 
+        
+    def __repr__(self):
+        return f"Volunteer('{self.email}', '{self.username}', '{self.password}', '{self.postcode}', '{self.house_number}')"
+
 class Order(db.Model):
     #__tablename__ = 'order'
     id = db.Column(db.Integer, primary_key = True)
@@ -44,6 +51,9 @@ class Order(db.Model):
         self.order = order
         self.order_date = order_date
         self.customer_house_number = order
+
+    def __repr__Order(self):
+        return f"Order('{self.order}', '{self.order_date}', '{self.customer_house_number}')"
 
 #SCHEMA################################################################ 
 #Create Marshmallow Schema (JSON Serialisable objects that are a mixture of python dictionaries and lists)
@@ -64,23 +74,5 @@ class OrderSchema(ma.SQLAlchemyAutoSchema):
 customer_schema = CustomerSchema(many=True)
 volunteer_schema = VolunteerSchema(many=True)
 orders_schema = OrderSchema(many=True)
-
-# # require initialisation for either scenario i.e. if single product is wanted by geriatric or greater than one product. 
-# Order_schema = OrderSchema(strict=True)
-# Orders_schema = OrdersSchema(strict=True)
-
-
-# class ShoppingListSchema(ma.SQLAlchemyAutoSchema):
-#     class Meta:
-#         model = ShoppingList
-
-# class ProductSchema(ma.SQLAlchemyAutoSchema):
-#     class Meta:
-#         model = Product
-
-# class SupermarketSchema(ma.SQLAlchemyAutoSchema):
-#     class Meta:
-#         model = Supermarket
-
 
 

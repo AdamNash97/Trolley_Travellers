@@ -18,7 +18,7 @@ def find_volunteer_match(customer):
     customer_postcode = current_customer.postcode
     #Delete any spaces and convert to upper case.
     postcode_to_process = customer_postcode.replace(" ","").upper()
-    #Regex to extract all components of postocde, regardless of length, for UK postcodes.
+    #Regex to extract all components of postcode, regardless of length, for UK postcodes.
     postcode_components = re.findall(r'^((([A-Z][A-Z]{0,1})([0-9][A-Z0-9]{0,2})) {0,}(([0-9])([A-Z]{2})))', postcode_to_process)
     #Extract just first half postcode from customer:
     customer_postcode_first_half = postcode_components[1]
@@ -37,7 +37,7 @@ def find_volunteer_match(customer):
     
     #Loop over list of first half of volunteer postcodes to look for a match with
     #customer's first half of postcode:
-    looper=0
+    looper = 0
     for row in volunteer_postcodes_first_halves:
         while looper==0:
             #When first match is found, exit while loop and record the row of the matched volunteer
@@ -53,8 +53,6 @@ def find_volunteer_match(customer):
     
     return matched_volunteer
    
-
-
 
     #Alternative, definitely easier option, for finding matched customer (found after all the effort made for the above):
     #postcode_matches = db.execute('SELECT id, email, username, postcode FROM volunteer WHERE postcode=customer_postcode')
