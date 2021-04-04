@@ -16,7 +16,7 @@ def list_customer(id):
     try:
         customer = Customer.query.get(id)
         customer_schema = CustomerSchema()
-        return customer_schema.jsonify({customer})
+        return customer_schema.jsonify(customer)
     except:
         abort(404)
 
@@ -51,11 +51,14 @@ def new_customers():
             db.session.commit()
             customer_schema = CustomerSchema()
             customer_schema.jsonify(new_customer)
-        return jsonify({'# customers in database' : new_customer.id})
+        customers = Customer.query.all()
+        customer_schema = CustomerSchema(many=True)
+        output = customer_schema.dump(customers)
+        return jsonify({'# customers in database' : len(output)})
     except:
          abort(400)
 
-@user_customer.route('/update_customer<id>', methods=['POST'])
+@user_customer.route('/update_customer/<id>', methods=['PUT'])
 def update_customer(id):
     try:
         customer = Customer.query.get(id)

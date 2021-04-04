@@ -16,7 +16,7 @@ def list_volunteer(id):
     try:
         volunteer = Volunteer.query.get(id)
         volunteer_schema = VolunteerSchema()
-        return volunteer_schema.jsonify({volunteer})
+        return volunteer_schema.jsonify(volunteer)
     except:
         abort(404)
 
@@ -36,7 +36,29 @@ def new_volunteer():
     except:
          abort(400)
 
-@user_volunteer.route('/update_volunteer<id>', methods=['POST'])
+@user_volunteer.route('/add_multiple_volunteers', methods=['POST'])
+def new_volunteers():
+    try:
+        jsonBody = request.get_json()
+        for json_object in jsonBody:
+            email_data = json_object.get('email')
+            username_data = json_object.get('username')
+            password_data = json_object.get('password')
+            postcode_data = json_object.get('postcode')
+            house_number_data = json_object.get('house_number')
+            new_volunteer = Volunteer(email=email_data, username=username_data, password=password_data, postcode=postcode_data, house_number=house_number_data)
+            db.session.add(new_volunteer)
+            db.session.commit()
+            volunteer_schema = VolunteerSchema()
+            volunteer_schema.jsonify(new_volunteer)
+        volunteers = Customer.query.all()
+        volunteer_schema = CustomerSchema(many=True)
+        output = volunteer_schema.dump(volunteers)
+        return jsonify({'# volunteers in database' : len(output)})
+    except:
+         abort(400)
+
+@user_volunteer.route('/update_volunteer/<id>', methods=['PUT'])
 def update_volunteer(id):
     try:
         volunteer = Volunteer.query.get(id)
@@ -58,25 +80,6 @@ def update_volunteer(id):
         return volunteer_schema.jsonify(volunteer)
     except:
          abort(404)
-
-@user_volunteer.route('/add_multiple_volunteers', methods=['POST'])
-def new_volunteers():
-    try:
-        jsonBody = request.get_json()
-        for json_object in jsonBody:
-            email_data = json_object.get('email')
-            username_data = json_object.get('username')
-            password_data = json_object.get('password')
-            postcode_data = json_object.get('postcode')
-            house_number_data = json_object.get('house_number')
-            new_volunteer = Volunteer(email=email_data, username=username_data, password=password_data, postcode=postcode_data, house_number=house_number_data)
-            db.session.add(new_volunteer)
-            db.session.commit()
-            volunteer_schema = VolunteerSchema()
-            volunteer_schema.jsonify(new_volunteer)
-        return jsonify({'# volunteers in database' : new_volunteer.id})
-    except:
-         abort(400)
 
 @user_volunteer.route('/delete_volunteer/<id>', methods=['DELETE'])
 def delete_volunteer(id):

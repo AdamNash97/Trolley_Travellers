@@ -17,7 +17,7 @@ class Customer(db.Model):
         self.house_number = house_number 
 
     def __repr__(self):
-        return f"Customer('{self.email}', '{self.username}', '{self.password}', '{self.postcode}', '{self.hsouse_number}')"
+        return f"Customer('{self.email}', '{self.username}', '{self.password}', '{self.postcode}', '{self.house_number}')"
 
 class Volunteer(db.Model):
     #__tablename__ = 'volunteer'
