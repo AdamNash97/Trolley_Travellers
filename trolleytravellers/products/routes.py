@@ -4,7 +4,7 @@ from trolleytravellers.models import Product
 orders = Blueprint('products', __name__)
 
 
-@orders.route('/product', methods=['get'])
+@orders.route('/product', methods=['GET'])
 def get_products():
     products = Product.query.all()
     return jsonify({
