@@ -17,7 +17,7 @@ class Customer(db.Model):
         self.house_number = house_number 
 
     def __repr__(self):
-        return f"Customer('{self.email}', '{self.username}', '{self.password}', '{self.postcode}', '{self.house_number}')"
+        return f"Customer('{self.email}', '{self.username}', '{self.password}', '{self.postcode}', '{self.hsouse_number}')"
 
 class Volunteer(db.Model):
     #__tablename__ = 'volunteer'
@@ -57,7 +57,7 @@ class Order(db.Model):
 
     
 class Product(db.Model):
-    #__tablename__ = 'order'
+    #__tablename__ = 'product'
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Integer)
     name = db.Column(db.String())
@@ -68,9 +68,27 @@ class Product(db.Model):
         self.name = name
         self.quantity = quantity
 
-    def __repr__(self):
-        return f"Product('{self.price}', '{self.name}', '{self.quantity}')"
+    def info(self):
+        return {
+            'id': self.id,
+            'price': self.price,
+            'name': self.name,
+            'quantity': self.quantity,
+        }
+        
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
 
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def __repr__(self):
+        return json.dumps(self.info())
 
 
 #SCHEMA################################################################ 
