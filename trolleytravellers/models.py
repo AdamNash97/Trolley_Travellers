@@ -8,6 +8,8 @@ class Customer(db.Model):
     password = db.Column(db.String(40), nullable = False)
     postcode = db.Column(db.String(40), nullable = False)
     house_number = db.Column(db.String(4), nullable = False)
+    # Defining one-to-many relationship: a customer submits several orders 
+    orders = db.relationship("Order", backref="customer") # backref puts a property "customer" on the "Order" class
 
     def __init__(self, email, username, password, postcode, house_number):
         self.email = email
@@ -27,6 +29,8 @@ class Volunteer(db.Model):
     password = db.Column(db.String(40), nullable = False)
     postcode = db.Column(db.String(40), nullable = False)
     house_number = db.Column(db.String(4), nullable = False)
+    # Defining one-to-one relationship: a volunteer has only one order to fulfil at one time
+    orders = db.relationship("Order", backref="volunteer", uselist=False) # Specifying uselist=False converts it into a 1-1 relationship
 
     def __init__(self, email, username, password, postcode, house_number):
         self.email = email
@@ -35,27 +39,32 @@ class Volunteer(db.Model):
         self.postcode = postcode
         self.house_number = house_number 
 
-        
     def __repr__(self):
         return f"Volunteer('{self.email}', '{self.username}', '{self.password}', '{self.postcode}', '{self.house_number}')"
+
+# Association table for many-to-many relationship: An order has a list of products to shop, and a product can be referenced more than once in several orders
+intermediary = db.Table('intermediary',
+    db.Column('order_id', db.Integer, db.ForeignKey('order.id')),
+    db.Column('product_id', db.Integer, db.ForeignKey('product.id'))
+)
 
 class Order(db.Model):
     #__tablename__ = 'order'
     id = db.Column(db.Integer, primary_key = True)
-    order = db.Column(db.String(1000))
     order_date = db.Column(db.Integer, nullable = False)
-    customer_house_number = db.Column(db.Integer, db.ForeignKey('customer.house_number'))
-    customer_postcode = db.Column(db.String(40), db.ForeignKey("customer.postcode"))
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable = False)
+    volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteer.id'), nullable = False)
+    # Defining many-to-many relationship
+    shoppinglists = db.relationship("Product", secondary=intermediary, backref="orders")
 
     def __init__(self, order=None):
-        self.order = order
         self.order_date = order_date
-        self.customer_house_number = order
+        self.customer_id = customer_id
+        self.volunteer_id = volunteer_id
 
     def __repr__(self):
-        return f"Order('{self.order}', '{self.order_date}', '{self.customer_house_number}')"
+        return f"Order('{self.order_date}', '{self.customer_id}', '{self.volunteer_id}')"
 
-    
 class Product(db.Model):
     #__tablename__ = 'product'
     id = db.Column(db.Integer, primary_key=True)
