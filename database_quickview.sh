@@ -8,7 +8,7 @@ read -p "Enter choice : " choice
 
 if [ $choice = 1 ]
 	then
-python3 << EOF
+python << EOF
 from trolleytravellers import db, create_app
 app = create_app()
 app.app_context().push()
@@ -19,7 +19,7 @@ for customer in customers:
 EOF
 elif [ $choice = 2 ]
 	then
-python3 << EOF
+python << EOF
 from trolleytravellers import db, create_app
 app = create_app()
 app.app_context().push()
@@ -30,7 +30,7 @@ for volunteer in volunteers:
 EOF
 elif [ $choice = 3 ]
 	then
-python3 << EOF
+python << EOF
 from trolleytravellers import db, create_app
 app = create_app()
 app.app_context().push()
