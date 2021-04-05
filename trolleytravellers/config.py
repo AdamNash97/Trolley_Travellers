@@ -2,6 +2,14 @@
 #Combine all configuration in a single object to allow inheritance later.
 class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///site.db'
+    #Should ideally store in an environment variable locally and use os package to access: 
+    SECRET_KEY = '7e9d2cb1f691ff74c8862c62df1502b6'
+
+#Creating the secret key:
+#In python terminal:
+#'import secrets'
+#'secrets.token_hex(16)'
+#https://stackoverflow.com/questions/34902378/where-do-i-get-a-secret-key-for-flask
 
 #Create database and add data in terminal:
 #'python'

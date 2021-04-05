@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, abort
-from trolleytravellers import db
+from trolleytravellers import db, bcrypt
 from trolleytravellers.models import Customer, CustomerSchema
 
 user_customer = Blueprint('user_customer', __name__)
@@ -26,9 +26,11 @@ def new_customer():
         email_data = request.json['email']
         username_data = request.json['username']
         password_data = request.json['password']
+        #Hash password entered by user for storage in database.
+        hashed_password = bcrypt.generate_password_hash(password_data).decode('utf-8')
         postcode_data = request.json['postcode']
         house_number_data = request.json['house_number']
-        new_customer = Customer(email=email_data, username=username_data, password=password_data, postcode=postcode_data, house_number=house_number_data)
+        new_customer = Customer(email=email_data, username=username_data, password=hashed_password, postcode=postcode_data, house_number=house_number_data)
         db.session.add(new_customer)
         db.session.commit()
         customer_schema = CustomerSchema()
@@ -44,9 +46,11 @@ def new_customers():
             email_data = json_object.get('email')
             username_data = json_object.get('username')
             password_data = json_object.get('password')
+            #Hash password entered by user for storage in database.
+            hashed_password = bcrypt.generate_password_hash(password_data).decode('utf-8')
             postcode_data = json_object.get('postcode')
             house_number_data = json_object.get('house_number')
-            new_customer = Customer(email=email_data, username=username_data, password=password_data, postcode=postcode_data, house_number=house_number_data)
+            new_customer = Customer(email=email_data, username=username_data, password=hashed_password, postcode=postcode_data, house_number=house_number_data)
             db.session.add(new_customer)
             db.session.commit()
             customer_schema = CustomerSchema()
@@ -70,7 +74,9 @@ def update_customer(id):
 
         customer.email = email_data
         customer.username = username_data
-        customer.password = password_data
+        #Hash password entered by user for storage in database.
+        hashed_password = bcrypt.generate_password_hash(password_data).decode('utf-8')
+        customer.password = hashed_password
         customer.postcode = postcode_data
         customer.house_number = house_number_data
        

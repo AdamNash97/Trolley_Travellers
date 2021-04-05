@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, abort
-from trolleytravellers import db
+from trolleytravellers import db, bcrypt
 from trolleytravellers.models import Volunteer, VolunteerSchema
 
 user_volunteer = Blueprint('user_volunteer', __name__)
@@ -26,9 +26,11 @@ def new_volunteer():
         email_data = request.json['email']
         username_data = request.json['username']
         password_data = request.json['password']
+        #Hash password entered by user for storage in database.
+        hashed_password = bcrypt.generate_password_hash(password_data).decode('utf-8')
         postcode_data = request.json['postcode']
         house_number_data = request.json['house_number']
-        new_volunteer = Volunteer(email=email_data, username=username_data, password=password_data, postcode=postcode_data, house_number=house_number_data)
+        new_volunteer = Volunteer(email=email_data, username=username_data, password=hashed_password, postcode=postcode_data, house_number=house_number_data)
         db.session.add(new_volunteer)
         db.session.commit()
         volunteer_schema = VolunteerSchema()
@@ -44,9 +46,11 @@ def new_volunteers():
             email_data = json_object.get('email')
             username_data = json_object.get('username')
             password_data = json_object.get('password')
+            #Hash password entered by user for storage in database.
+            hashed_password = bcrypt.generate_password_hash(password_data).decode('utf-8')
             postcode_data = json_object.get('postcode')
             house_number_data = json_object.get('house_number')
-            new_volunteer = Volunteer(email=email_data, username=username_data, password=password_data, postcode=postcode_data, house_number=house_number_data)
+            new_volunteer = Volunteer(email=email_data, username=username_data, password=hashed_password, postcode=postcode_data, house_number=house_number_data)
             db.session.add(new_volunteer)
             db.session.commit()
             volunteer_schema = VolunteerSchema()
@@ -70,7 +74,9 @@ def update_volunteer(id):
 
         volunteer.email = email_data
         volunteer.username = username_data
-        volunteer.password = password_data
+        #Hash password entered by user for storage in database.
+        hashed_password = bcrypt.generate_password_hash(password_data).decode('utf-8')
+        volunteer.password = hashed_password
         volunteer.postcode = postcode_data
         volunteer.house_number = house_number_data
        
