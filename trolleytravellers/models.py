@@ -70,12 +70,10 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Float)
     name = db.Column(db.String(80))
-    # quantity = db.Column(db.Integer) # Assuming unlimited stock for MVP
 
-    def __init__(self,price, name, quantity):
+    def __init__(self, price, name):
         self.price = price
         self.name = name
-        # self.quantity = quantity # Assuming unlimited stock for MVP
 
     def __repr__(self):
         return f"Product('{self.price}', '{self.name}')"
