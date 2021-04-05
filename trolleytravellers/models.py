@@ -57,7 +57,7 @@ class Order(db.Model):
     # Defining many-to-many relationship
     shoppinglists = db.relationship("Product", secondary=intermediary, backref="orders")
 
-    def __init__(self, order=None):
+    def __init__(self, order_date, customer_id, volunteer_id):
         self.order_date = order_date
         self.customer_id = customer_id
         self.volunteer_id = volunteer_id

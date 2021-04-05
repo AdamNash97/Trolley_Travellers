@@ -51,8 +51,8 @@ def new_volunteers():
             db.session.commit()
             volunteer_schema = VolunteerSchema()
             volunteer_schema.jsonify(new_volunteer)
-        volunteers = Customer.query.all()
-        volunteer_schema = CustomerSchema(many=True)
+        volunteers = Volunteer.query.all()
+        volunteer_schema = VolunteerSchema(many=True)
         output = volunteer_schema.dump(volunteers)
         return jsonify({'# volunteers in database' : len(output)})
     except:

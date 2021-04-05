@@ -18,3 +18,19 @@ def not_found(error):
         "error": 404,
         "message": "Not found"
     }), 404
+
+@errors.app_errorhandler(403)
+def not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 403,
+        "message": "Forbidden page"
+    }), 403
+
+@errors.app_errorhandler(500)
+def not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 500,
+        "message": "General server error"
+    }), 500
