@@ -77,27 +77,9 @@ class Product(db.Model):
         self.name = name
         # self.quantity = quantity # Assuming unlimited stock for MVP
 
-    def info(self):
-        return {
-            'id': self.id,
-            'price': self.price,
-            'name': self.name,
-            # 'quantity': self.quantity, # Assuming unlimited stock for MVP
-        }
-        
-    def insert(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()
-
-    def update(self):
-        db.session.commit()
-
     def __repr__(self):
-        return json.dumps(self.info())
+        return f"Product('{self.price}', '{self.name}')"
+
 
 
 #SCHEMA################################################################ 
