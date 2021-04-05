@@ -9,7 +9,13 @@ instance/*
 ### Flask.Python Stack ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*/__pycache__
+trolleytravellers/__pycache__
+trolleytravellers/errors/__pycache__
+trolleytravellers/main/__pycache__
+trolleytravellers/orders/__pycache__
+trolleytravellers/products/__pycache__
+trolleytravellers/user_customer/__pycache__
+trolleytravellers/user_volunteer/__pycache__
 *.py[cod]
 *$py.class
 
