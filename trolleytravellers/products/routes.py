@@ -1,18 +1,16 @@
-from flask import Blueprint
-from trolleytravellers.models import Product
+from flask import Blueprint, jsonify
+from trolleytravellers.models import Product, ProductSchema
 
-orders = Blueprint('products', __name__)
+products = Blueprint('products', __name__)
 
-
-@orders.route('/product', methods=['GET'])
-def get_products():
+@products.route('/product_list', methods=['GET'])
+def list_products():
     products = Product.query.all()
-    return jsonify({
-        'success': True,
-        'products': [product.info() for product in products]
-    })
-
-@orders.route('/product', methods=['POST'])
+    product_schema = ProductSchema(many=True)
+    output = product_schema.dump(products)
+    return jsonify({'product' : output})
+    
+@products.route('/product', methods=['POST'])
 def new_product():
     try:
         jsonBody = request.get_json()
@@ -27,7 +25,7 @@ def new_product():
     except:
          abort(400)
 
-@orders.route('/product/<id>', methods=['DELETE'])
+@products.route('/product/<id>', methods=['DELETE'])
 def delete_product(id):
     product = Product.query.get(id)
     if product is None:
@@ -36,7 +34,7 @@ def delete_product(id):
     return jsonify({'success': True})
 
 # PATCH - Used to create new data or update/modify existing data at the specified resource
-@orders.route('/product', methods=['PATCH'])
+@products.route('/product', methods=['PATCH'])
 def edit_product():
     try:
         jsonBody = request.get_json()

@@ -23,6 +23,7 @@ def create_app(config_class=Config):
     from trolleytravellers.main.routes import main
     from trolleytravellers.user_customer.routes import user_customer
     from trolleytravellers.user_volunteer.routes import user_volunteer
+    from trolleytravellers.products.routes import products
     from trolleytravellers.orders.routes import orders
     from trolleytravellers.errors.error_handlers import errors
 
@@ -30,6 +31,7 @@ def create_app(config_class=Config):
     app.register_blueprint(orders)
     app.register_blueprint(user_customer)
     app.register_blueprint(user_volunteer)
+    app.register_blueprint(products)
     app.register_blueprint(main)
     app.register_blueprint(errors)
    

@@ -115,9 +115,14 @@ class OrderSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Order
 
+class ProductSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Product
+
 # Initalisation of Schema
 customer_schema = CustomerSchema(many=True)
 volunteer_schema = VolunteerSchema(many=True)
 orders_schema = OrderSchema(many=True)
+product_schema = ProductSchema(many=True)
 
 
