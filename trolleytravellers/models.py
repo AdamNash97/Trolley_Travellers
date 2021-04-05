@@ -70,19 +70,19 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Float)
     name = db.Column(db.String(80))
-    quantity = db.Column(db.Integer)
+    # quantity = db.Column(db.Integer) # Assuming unlimited stock for MVP
 
     def __init__(self,price, name, quantity):
         self.price = price
         self.name = name
-        self.quantity = quantity
+        # self.quantity = quantity # Assuming unlimited stock for MVP
 
     def info(self):
         return {
             'id': self.id,
             'price': self.price,
             'name': self.name,
-            'quantity': self.quantity,
+            # 'quantity': self.quantity, # Assuming unlimited stock for MVP
         }
         
     def insert(self):
