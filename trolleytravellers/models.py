@@ -68,8 +68,8 @@ class Order(db.Model):
 class Product(db.Model):
     #__tablename__ = 'product'
     id = db.Column(db.Integer, primary_key=True)
-    price = db.Column(db.Integer)
-    name = db.Column(db.String())
+    price = db.Column(db.Float)
+    name = db.Column(db.String(80))
     quantity = db.Column(db.Integer)
 
     def __init__(self,price, name, quantity):
