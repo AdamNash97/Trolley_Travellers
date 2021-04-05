@@ -28,13 +28,13 @@ elif [ $choice = 4 ]
 table_var="Order"
 export table_var
 table_query
-
 fi
 echo 'Would you like to view another database table: [y, n]'
+read answer
 }
 
 function table_query {
-python << EOF
+python3 << EOF
 import os, importlib
 table = os.environ['table_var']
 print(table)
@@ -47,11 +47,9 @@ for entity in entities:
 	print(entity)
 EOF
 }
-
 while :
 do
 	database_selector
-read answer
 if [ $answer = 'y' ]
   then 
   	database_selector
@@ -59,4 +57,3 @@ else
    break
 fi
 done
-
