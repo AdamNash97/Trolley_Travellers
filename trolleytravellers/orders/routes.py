@@ -99,7 +99,16 @@ def place_order_and_find_volunteer():
         new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id)
         db.session.add(new_order)
         db.session.commit()
+
         order_schema = OrderSchemas()
         return order_schema.jsonify(new_order)
     except:
          abort(400)
+
+@orders.route('add_product_to_order_product', methods=['POST'])
+def add_product():
+    try:
+        customer_id = request.json['customer_id']
+#ACCESS TO PRODUCT TABLE -> SELECT SPECIFIC PRODUCT USING A NAME -> ASSIGN A QUANTITY TO THAT PRODUCT -> USE FOREIGN KEY TO ACCESS PRODUCT ID -> USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
+    except:
+        abort(400)

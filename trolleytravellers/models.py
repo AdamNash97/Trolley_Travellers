@@ -1,6 +1,7 @@
 from trolleytravellers import db, ma
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
+from enum import Enum
 
 class Customer(db.Model):
     #__tablename__ = 'customer'
@@ -99,7 +100,7 @@ class OrderProduct(db.Model):
     product = db.relationship("Product", backref="orders")
 
 # not a table, rather it's for the enum data type below this class
-class Status(enum.Enum):
+class Status(Enum):
     P = "Pending"
     D = "Dispatched"
     C = "Completed"
@@ -114,7 +115,7 @@ class Order(db.Model):
     # Defining relationship
     products = db.relationship("OrderProduct", backref="order")
 
-    def __init__(self, order_date, customer_id, volunteer_id):
+    def __init__(self, order_date, customer_id, volunteer_id, status):
         self.order_date = order_date
         self.customer_id = customer_id
         self.volunteer_id = volunteer_id
@@ -160,6 +161,10 @@ class OrderSchema(ma.SQLAlchemyAutoSchema):
 class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product
+
+class OrderSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        fields = ("order_date", "customer_id", "volunteer_id")
 
 
 customer_schema = CustomerSchema(many=True)

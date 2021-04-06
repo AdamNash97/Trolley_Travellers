@@ -42,11 +42,11 @@ def find_volunteer_match(customer_id):
     create_connection(database)
     cur = conn.cursor()
     #Take id and postcode columns from volunteer table.
-    cur.execute(f"SELECT id, substr(postcode, 1, {len_postcode}) FROM volunteer;") 
+    cur.execute(f"SELECT id, substr(postcode, 1, {len_postcode}), engaged FROM volunteer;") 
     rows = cur.fetchall()
     for row in rows:
-        #Would like to add in second conditional here that says AND engaged=false, will discuss with you all.
-        if row[1] == customer_postcode_first_half:
+        #If postcode matches and the volunteer is not currently engaged (FALSE=0 in SQL boolean types)
+        if row[1] == customer_postcode_first_half and row[2] == 0:
             matched_volunteer_id = int(row[0])
             break
     #Close connection to database
