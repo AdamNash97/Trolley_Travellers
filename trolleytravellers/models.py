@@ -162,9 +162,7 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product
 
-class OrderSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        fields = ("order_date", "customer_id", "volunteer_id")
+
 
 
 customer_schema = CustomerSchema(many=True)

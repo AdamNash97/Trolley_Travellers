@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, request
 from trolleytravellers import db
-from trolleytravellers.models import Order, OrderSchema, OrderSchemas
+from trolleytravellers.models import Order, OrderSchema
 from trolleytravellers.main.utils import get_current_date
 from trolleytravellers.orders.utils import find_volunteer_match
 
@@ -100,7 +100,7 @@ def place_order_and_find_volunteer():
         db.session.add(new_order)
         db.session.commit()
 
-        order_schema = OrderSchemas()
+        order_schema = OrderSchema()
         return order_schema.jsonify(new_order)
     except:
          abort(400)
