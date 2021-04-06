@@ -16,7 +16,7 @@ class Config:
 #'from trolleytravellers import db, create_app'
 #'app = create_app()'
 #'app.app_context().push()'
-#'from trolleytravellers.models import Customer, Volunteer, Order, Products, Order_Products'
+#'from trolleytravellers.models import Customer, Volunteer, Order, Product'
 #'db.create_all()'
 #'customer_1 = Customer(email='adam@demo.com', username='adam', password='password', postcode='ST34QX',house_number='99')'
 #'volunteer_1 = Volunteer(email='brian@demo.com', username='brian', password='passwords', postcode='ST12NB', house_number='98', engaged=0)'
