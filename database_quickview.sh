@@ -1,5 +1,5 @@
 #! /bin/bash
-function database_selector {
+function database_table_selector {
 
 echo 'Which database table would you like to view?'
 echo '1: Customer, 2: Volunteer, 3: Product, 4: Order'
@@ -49,10 +49,10 @@ EOF
 }
 while :
 do
-	database_selector
+	database_table_selector
 if [ $answer = 'y' ]
   then 
-  	database_selector
+  	database_table_selector
 else 
    break
 fi
