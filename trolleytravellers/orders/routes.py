@@ -105,7 +105,7 @@ def place_order_and_find_volunteer():
     except:
          abort(400)
 
-@orders.route('add_product_to_order_product', methods=['POST'])
+@orders.route('/add_product_to_order_product', methods=['POST'])
 def add_product():
     try:
         customer_id = request.json['customer_id']
