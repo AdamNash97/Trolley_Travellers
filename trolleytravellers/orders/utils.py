@@ -4,7 +4,7 @@ from sqlite3 import Error
 
 #Need to fix this, connection only works when you specify ABSOLUTE path, hence change for your own.
 #Otherwise, it just creates a new empty database with the name you specify. Weird bug.
-database = r"C:/Users/adamn/Documents/Bright_Network/Trolley_Travellers/trolleytravellers/site.db"
+database = r"./trolleytravellers/site.db"
 
 #General method to be used for creating a connection to the database
 def create_connection(database):
