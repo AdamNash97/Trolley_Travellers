@@ -30,7 +30,9 @@ def new_volunteer():
         hashed_password = bcrypt.generate_password_hash(password_data).decode('utf-8')
         postcode_data = request.json['postcode']
         house_number_data = request.json['house_number']
-        new_volunteer = Volunteer(email=email_data, username=username_data, password=hashed_password, postcode=postcode_data, house_number=house_number_data)
+        #Default engaged setting is false, hence volunteer is free to accept jobs upoin joining.
+        engaged_data = 0
+        new_volunteer = Volunteer(email=email_data, username=username_data, password=hashed_password, postcode=postcode_data, house_number=house_number_data, engaged=engaged_data)
         db.session.add(new_volunteer)
         db.session.commit()
         volunteer_schema = VolunteerSchema()
@@ -50,7 +52,8 @@ def new_volunteers():
             hashed_password = bcrypt.generate_password_hash(password_data).decode('utf-8')
             postcode_data = json_object.get('postcode')
             house_number_data = json_object.get('house_number')
-            new_volunteer = Volunteer(email=email_data, username=username_data, password=hashed_password, postcode=postcode_data, house_number=house_number_data)
+            engaged_data = 0
+            new_volunteer = Volunteer(email=email_data, username=username_data, password=hashed_password, postcode=postcode_data, house_number=house_number_data, engaged=engaged_data)
             db.session.add(new_volunteer)
             db.session.commit()
             volunteer_schema = VolunteerSchema()
