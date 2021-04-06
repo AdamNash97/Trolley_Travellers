@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, abort, request
 from trolleytravellers import db
 from trolleytravellers.models import Order, OrderSchema
+from trolleytravellers.main.utils import get_current_date
+from trolleytravellers.orders.utils import find_volunteer_match
 
 orders = Blueprint('orders', __name__)
 
@@ -16,6 +18,7 @@ def list_orders():
 def list_order():
     try:
         order = Order.query.get(id)
+        order_schema = OrderSchema()
         return order_schema.jsonify(order)
     except:
          abort(400)
@@ -29,6 +32,7 @@ def new_order():
         new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id)
         db.session.add(new_order)
         db.session.commit()
+        order_schema = OrderSchema()
         return order_schema.jsonify(new_order)
     except:
          abort(400)
@@ -66,7 +70,7 @@ def update_order(id):
         order.volunteer_id = volunteer_id
       
         db.session.commit()
-
+        order_schema = OrderSchema()
         return order_schema.jsonify(order)
     except:
          abort(404)
@@ -77,9 +81,25 @@ def delete_order(id):
         order = Order.query.get(id)
         db.session.delete(order)
         db.session.commit()
+        order_schema = OrderSchema()
         return order_schema.jsonify({order})
     except:
         abort(404)
 
-
-    
+#Just need to pass in a customer_id in the body when making the request
+#Will later need to add in if/else statement to handle the case when there
+#are no matching volunteers, but for now we are guaranteed a match using our
+#mock data.
+@orders.route('/place_order_and_find_volunteer', methods=['POST'])
+def place_order_and_find_volunteer():
+    try:
+        order_date = get_current_date()
+        customer_id = request.json['customer_id']
+        volunteer_id = find_volunteer_match(int(customer_id))
+        new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id)
+        db.session.add(new_order)
+        db.session.commit()
+        order_schema = OrderSchema()
+        return order_schema.jsonify(new_order)
+    except:
+         abort(400)

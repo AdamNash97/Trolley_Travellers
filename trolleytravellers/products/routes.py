@@ -81,4 +81,3 @@ def delete_product(id):
     except:
         abort(404)
 
-        
