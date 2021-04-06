@@ -143,6 +143,10 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product
 
+class OrderSchemas(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        fields = ("order_date", "customer_id", "volunteer_id")
+
 # Initalisation of Schema
 customer_schema = CustomerSchema(many=True)
 volunteer_schema = VolunteerSchema(many=True)
