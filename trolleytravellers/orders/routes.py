@@ -144,45 +144,33 @@ def add_product():
     """
     #try:
         #customer_id = request.json['customer_id']
-#BODY: list of product names
-# Validate items: list of prouduct names in shopping list
-# If in db, retrieve product id, add to shopping list
+    #BODY: list of product names
+    # Validate items: list of prouduct names in shopping list
+    # If in db, retrieve product id, add to shopping list
     product_names = request.json['product_names']
     conn = create_connection(database)
     cur = conn.cursor()
-    
     shopping_list, initial_shopping_list = [], []
     cur.execute(f"SELECT id, name FROM product")
     product_rows = cur.fetchall()
+
+    all_items = {} 
+    for product in product_rows:
+        all_items[product[1]] = f'{product[0]}' # dictionary (product name: id)
+
     for product in product_names:
-        for product_row in product_rows:
-            if product_row[1] == str(product):
-                initial_shopping_list.append(product_row[0][0])
-        # for product_row in product_rows:
-        #     initial_shopping_list.append(int(product_row[0]))
+        if product in all_items:
+            initial_shopping_list.append(all_items[str(product)])
 
-        ### EXAMPLE ###
-        # a_country = "United States"
-            # a_city = "Moscow"
-
-        # parameterized_query = cursor.execute(
-        #     "SELECT * FROM airports WHERE country=? OR city=?", (a_country, a_city)
-        # )
-        ########
-        
     # One column list of product ids, perform counting, deletion and quantity variables
-
-    # shopping_list = [list  selected product ids]
-    shopping_list = [ [product, shopping_list.count(product)] for product in list(set(initial_shopping_list)) ] # product, quantity
-
+    shopping_list = [ [product, initial_shopping_list.count(product)] for product in list(set(initial_shopping_list)) ] # product, quantity
     conn.close()
 
     # shopping_list_schema = ShoppingListSchema()
-    
-    # output = shopping_list_schema.dump(shopping_list)
-    # return jsonify({'shopping list' : output})
-
-    return json.dumps(initial_shopping_list)
+    # return json.dumps(initial_shopping_list) 
+    return json.dumps(shopping_list)
+    # return json.dumps(product_rows[0][0]) # 1
+    # return json.dumps(product_rows[0][1]) # "Whmis Spray Bottle Graduated"
     # except:
     
     #     abort(400)
