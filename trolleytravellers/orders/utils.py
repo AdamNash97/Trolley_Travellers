@@ -2,8 +2,6 @@ from trolleytravellers.models import Customer
 import re, sqlite3
 from sqlite3 import Error
 
-#Need to fix this, connection only works when you specify ABSOLUTE path, hence change for your own.
-#Otherwise, it just creates a new empty database with the name you specify. Weird bug.
 database = r"./trolleytravellers/site.db"
 
 #General method to be used for creating a connection to the database
@@ -42,11 +40,11 @@ def find_volunteer_match(customer_id):
     create_connection(database)
     cur = conn.cursor()
     #Take id and postcode columns from volunteer table.
-    cur.execute(f"SELECT id, substr(postcode, 1, {len_postcode}) FROM volunteer;") 
+    cur.execute(f"SELECT id, substr(postcode, 1, {len_postcode}), engaged FROM volunteer;") 
     rows = cur.fetchall()
     for row in rows:
-        #Would like to add in second conditional here that says AND engaged=false, will discuss with you all.
-        if row[1] == customer_postcode_first_half:
+        #If postcode matches and the volunteer is not currently engaged (FALSE=0 in SQL boolean types)
+        if row[1] == customer_postcode_first_half and row[2] == 0:
             matched_volunteer_id = int(row[0])
             break
     #Close connection to database
@@ -58,7 +56,6 @@ def find_volunteer_match(customer_id):
 #it matches 0 or more characters in the passed customer postcode, so this is saying 
 #"all rows where the column has 0 or more chars followed by "mystring" followed by 0 or more chars".
 #This might not be accurate with longer and more varied postcodes that have similar components.
-
 
 
 
