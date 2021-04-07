@@ -101,5 +101,16 @@ def delete_volunteer(id):
     except:
         abort(404)
 
+@user_volunteer.route('/volunteer_change_engagement',methods=['PUT'])
+def update_engaged_status():
+    try:
+        volunteer_id = request.json['volunteer_id']
+        volunteer = Volunteer.query.get(volunteer_id)
+        volunteer.engaged = not volunteer.engaged
+        db.session.commit()
+        volunteer_schema = VolunteerSchema()
+        return volunteer_schema.jsonify(volunteer)
+    except:
+        abort(404)
 
 

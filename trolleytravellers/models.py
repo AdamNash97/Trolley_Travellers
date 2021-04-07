@@ -115,9 +115,9 @@ class OrderProduct(db.Model):
 
 # not a table, rather it's for the enum data type below this class
 class Status(Enum):
-    PENDING = 1
-    DISPATCHED = 2
-    COMPLETED = 3
+    PENDING = "PENDING"
+    DISPATCHED = "DISPATCHED"
+    COMPLETED = "COMPLETED"
 
 class Order(db.Model):
     #__tablename__ = 'order'
@@ -152,7 +152,6 @@ class Product(db.Model):
         return f"Product('{self.price}', '{self.name}')"
 
 
-
 #SCHEMA################################################################ 
 #Create Marshmallow Schema (JSON Serialisable objects that are a mixture of python dictionaries and lists)
 
@@ -169,16 +168,14 @@ class OrderProductSchema(ma.SQLAlchemyAutoSchema):
         fields = ("order_id", "product_id", "quantity")
 
 class OrderSchema(ma.SQLAlchemyAutoSchema):
-    type = EnumField(Type, by_value=True)
-
+    status = EnumField(Status, by_value=True)
     class Meta:
         fields = ("order_date", "customer_id", "volunteer_id", "status")
 
 class ShoppingListSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         fields = ("product_id", "quantity")
-        
-        
+         
 class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product
