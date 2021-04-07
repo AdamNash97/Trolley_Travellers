@@ -169,6 +169,11 @@ class OrderProductSchema(ma.SQLAlchemyAutoSchema):
 class OrderSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         fields = ("order_date", "customer_id", "volunteer_id")
+
+class ShoppingListSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        fields = ("product_id", "quantity")
+        
         
 class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:

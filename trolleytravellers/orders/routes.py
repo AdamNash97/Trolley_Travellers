@@ -1,10 +1,11 @@
-from flask import Blueprint, jsonify, abort, request
+from flask import Blueprint, jsonify, abort, request 
+import json
 from trolleytravellers import db, mail
-from trolleytravellers.models import Order, OrderSchema, Status, Customer, Volunteer
+from trolleytravellers.models import Order, OrderSchema, Status, Customer, Volunteer, ShoppingListSchema
 from trolleytravellers.main.utils import get_current_date
-from trolleytravellers.orders.utils import find_volunteer_match
+from trolleytravellers.orders.utils import find_volunteer_match, create_connection
 from flask_mail import Message
-
+database = r"./trolleytravellers/site.db"
 
 orders = Blueprint('orders', __name__)
 
@@ -106,6 +107,8 @@ def place_order_and_find_volunteer():
         new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id, status=status)
         db.session.add(new_order)
         db.session.commit()
+
+        #new order product here will contain products
         current_customer = Customer.query.get(int(customer_id))
         msg = Message('Order Submission Confirmation',
                   sender='trolleytravellers@gmail.com',
@@ -132,23 +135,92 @@ def set_order_as_completed(order_id):
     db.session.commit()
     return order_schema.jsonify(new_order)
 
-
-@orders.route('/add_product_to_order_product', methods=['POST'])
+@orders.route('/create_shopping_list', methods=['POST'])
 def add_product():
     """
     ACCESS TO PRODUCT TABLE -> SELECT SPECIFIC PRODUCT USING A NAME -> 
     ASSIGN A QUANTITY TO THAT PRODUCT -> USE FOREIGN KEY TO ACCESS PRODUCT ID -> 
     USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
     """
-    try:
-        # customer_id = request.json['customer_id']
-        # item_data = request.json['item']
-        # quantity_requested = request.json['quantity']
-        # create_connection(database)
-        # cur = conn.cursor()
+    #try:
+        #customer_id = request.json['customer_id']
+#BODY: list of product names
+# Validate items: list of prouduct names in shopping list
+# If in db, retrieve product id, add to shopping list
+    product_names = request.json['product_names']
+    conn = create_connection(database)
+    cur = conn.cursor()
+    
+    shopping_list, initial_shopping_list = [], []
+    cur.execute(f"SELECT id, name FROM product")
+    product_rows = cur.fetchall()
+    for product in product_names:
+        for product_row in product_rows:
+            if product_row[1] == str(product):
+                initial_shopping_list.append(product_row[0][0])
+        # for product_row in product_rows:
+        #     initial_shopping_list.append(int(product_row[0]))
+
+        ### EXAMPLE ###
+        # a_country = "United States"
+            # a_city = "Moscow"
+
+        # parameterized_query = cursor.execute(
+        #     "SELECT * FROM airports WHERE country=? OR city=?", (a_country, a_city)
+        # )
+        ########
         
-        # return cur
-        # cur.execute(f"SELECT id FROM product WHERE name LIKE %{item_data}%") 
-        # conn.close()
-    except:
-        abort(400)
+    # One column list of product ids, perform counting, deletion and quantity variables
+
+    # shopping_list = [list  selected product ids]
+    shopping_list = [ [product, shopping_list.count(product)] for product in list(set(initial_shopping_list)) ] # product, quantity
+
+    conn.close()
+
+    # shopping_list_schema = ShoppingListSchema()
+    
+    # output = shopping_list_schema.dump(shopping_list)
+    # return jsonify({'shopping list' : output})
+
+    return json.dumps(initial_shopping_list)
+    # except:
+    
+    #     abort(400)
+
+        # {"product_names": ["Yucca", "Rhubarb","Yucca"]}
+
+        #ORDER (Assertion for SHOPPING LIST AND PRODUCT LIST)
+        ##list of items in shopping basket
+        ###Prodcuts inventory
+
+        #ORDER PRODUCT(Assertion between Prodcut list and order)
+        ##Order already been made
+        ###Prodcuts inventory
+
+        #SHOPPING_LIST (tuple -> order id: product id)
+        #OPEN ORDER REQUEST - GENERATES ORDER ID
+        #append customers choice: Order Id: product id
+        # Counting for loop for instances of each product id - Count method
+        #that geerates quantity values
+
+
+
+        # order_111.product_id.append_all(product_id=[18495, 19284, 20495])
+
+
+
+# @orders.route('/add_order', methods=['POST'])
+# def new_order():
+#     try:
+#         order_date = request.json['order_date']
+#         customer_id = request.json['customer_id']
+#         volunteer_id = request.json['volunteer_id']
+#         # quantity = 
+#         status = Status.PENDING
+#         new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id, status=status)
+#         db.session.add(new_order)
+#         db.session.commit()
+#         order_schema = OrderSchema()
+#         return order_schema.jsonify(new_order)
+#     except:
+#             abort(400)
