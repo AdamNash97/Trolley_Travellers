@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify, abort, request
-from trolleytravellers import db
-from trolleytravellers.models import Order, OrderSchema
+from trolleytravellers import db, mail
+from trolleytravellers.models import Order, OrderSchema, Status, Customer
 from trolleytravellers.main.utils import get_current_date
 from trolleytravellers.orders.utils import find_volunteer_match
+from flask_mail import Message
+
 
 orders = Blueprint('orders', __name__)
 
@@ -29,7 +31,8 @@ def new_order():
         order_date = request.json['order_date']
         customer_id = request.json['customer_id']
         volunteer_id = request.json['volunteer_id']
-        new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id)
+        status = Status.PENDING
+        new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id, status=status)
         db.session.add(new_order)
         db.session.commit()
         order_schema = OrderSchema()
@@ -45,7 +48,8 @@ def new_orders():
             order_date = json_object.get('order_date')
             customer_id = json_object.get('customer_id')
             volunteer_id = json_object.get('volunteer_id')
-            new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id)
+            status = Status.PENDING
+            new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id, status=status)
             db.session.add(new_order)
             db.session.commit()
             order_schema = OrderSchema()
@@ -64,11 +68,11 @@ def update_order(id):
         order_date = request.json['order_date']
         customer_id = request.json['customer_id']
         volunteer_id = request.json['volunteer_id']
-    
+        status = Status.PENDING
         order.order_date = order_date
         order.customer_id = customer_id
         order.volunteer_id = volunteer_id
-      
+        order.status = status
         db.session.commit()
         order_schema = OrderSchema()
         return order_schema.jsonify(order)
@@ -92,23 +96,38 @@ def delete_order(id):
 #mock data.
 @orders.route('/place_order_and_find_volunteer', methods=['POST'])
 def place_order_and_find_volunteer():
-    try:
+    # try:
         order_date = get_current_date()
         customer_id = request.json['customer_id']
         volunteer_id = find_volunteer_match(int(customer_id))
-        new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id)
+        status = Status.PENDING
+        new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id, status=status)
         db.session.add(new_order)
         db.session.commit()
+        current_customer = Customer.query.get(int(customer_id))
+        msg = Message('Order Submission Confirmation',
+                  sender='trolleytravellers@gmail.com',
+                  recipients=[current_customer.email])
+        msg.body = f'''Hi {current_customer.username}!
 
+Your order has been submitted and is now {status.name}. 
+You have been matched with volunteer number {volunteer_id}, who lives in your local area. 
+Thanks to them, your items will be with you soon.
+
+Thank you for using TrolleyTravellers!'''
+        mail.send(msg)
         order_schema = OrderSchema()
         return order_schema.jsonify(new_order)
-    except:
-         abort(400)
+    # except:
+    #      abort(400)
 
 @orders.route('/add_product_to_order_product', methods=['POST'])
 def add_product():
     try:
         customer_id = request.json['customer_id']
-#ACCESS TO PRODUCT TABLE -> SELECT SPECIFIC PRODUCT USING A NAME -> ASSIGN A QUANTITY TO THAT PRODUCT -> USE FOREIGN KEY TO ACCESS PRODUCT ID -> USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
+
+#ACCESS TO PRODUCT TABLE -> SELECT SPECIFIC PRODUCT USING A NAME 
+# -> ASSIGN A QUANTITY TO THAT PRODUCT -> USE FOREIGN KEY TO ACCESS PRODUCT ID 
+# -> USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
     except:
         abort(400)

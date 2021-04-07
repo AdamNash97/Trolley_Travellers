@@ -99,11 +99,23 @@ class OrderProduct(db.Model):
     # Defining relationship
     product = db.relationship("Product", backref="orders")
 
+    def get_order_total(self):
+        order_total = self.product.price * self.quantity
+        return order_total
+
+    def __init__(self, order_id, product_id, quantity):
+        self.order_id = order_id
+        self.product_id = product_id
+        self.quantity = quantity
+        
+    def __repr__(self):
+        return f"Order('{self.order_id}', '{self.product_id}', '{self.quantity}')"
+
 # not a table, rather it's for the enum data type below this class
 class Status(Enum):
-    P = "Pending"
-    D = "Dispatched"
-    C = "Completed"
+    PENDING = 1
+    DISPATCHED = 2
+    COMPLETED = 3
 
 class Order(db.Model):
     #__tablename__ = 'order'
