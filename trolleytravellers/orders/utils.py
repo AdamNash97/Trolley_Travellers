@@ -1,6 +1,8 @@
 from trolleytravellers.models import Customer
 import re, sqlite3
 from sqlite3 import Error
+from flask import request
+import json
 
 database = r"./trolleytravellers/site.db"
 
@@ -58,5 +60,29 @@ def find_volunteer_match(customer_id):
 #This might not be accurate with longer and more varied postcodes that have similar components.
 
 
+def create_shopping_list():
+ 
+    product_names = request.json['product_names']
+    conn = create_connection(database)
+    cur = conn.cursor()
+    shopping_list, initial_shopping_list = [], []
+    cur.execute("SELECT id, name FROM product")
+    product_rows = cur.fetchall()
 
+    all_items = {} 
+    for product in product_rows:
+        all_items[product[1]] = str(product[0]) # dictionary (product name: product id)
+
+    # appends product ids to initial_shopping_list via dictionary
+    for product in product_names:
+        if product in all_items:
+            initial_shopping_list.append(all_items[str(product)]) 
+            
+    # One column list of product ids, perform counting, deletion and quantity variables
+    shopping_list = [ [product, initial_shopping_list.count(product)] for product 
+    in list(set(initial_shopping_list)) ] # [ [product, quantity], [product, quantity], ...,
+                                          # [product, quantity] ]
+    conn.close()
+
+    return shopping_list
 

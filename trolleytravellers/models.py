@@ -164,7 +164,7 @@ class VolunteerSchema(ma.SQLAlchemyAutoSchema):
 
 class OrderProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
-        model = OrderProduct
+        fields = ("order_id", "product_id", "quantity")
 
 class OrderSchema(ma.SQLAlchemyAutoSchema):
     class Meta:

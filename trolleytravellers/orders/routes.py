@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, abort, request 
 import json
 from trolleytravellers import db, mail
-from trolleytravellers.models import Order, OrderSchema, Status, Customer, Volunteer, ShoppingListSchema
+from trolleytravellers.models import Order, OrderProduct, OrderSchema, Status, Customer, Volunteer, OrderProductSchema
 from trolleytravellers.main.utils import get_current_date
-from trolleytravellers.orders.utils import find_volunteer_match, create_connection
+from trolleytravellers.orders.utils import find_volunteer_match, create_connection, create_shopping_list
 from flask_mail import Message
 database = r"./trolleytravellers/site.db"
 
@@ -97,7 +97,7 @@ def delete_order(id):
 #mock data.
 @orders.route('/place_order_and_find_volunteer', methods=['POST'])
 def place_order_and_find_volunteer():
-    try:
+    #try:
         order_date = get_current_date()
         customer_id = request.json['customer_id']
         volunteer_id = find_volunteer_match(int(customer_id))
@@ -107,7 +107,15 @@ def place_order_and_find_volunteer():
         new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id, status=status)
         db.session.add(new_order)
         db.session.commit()
-
+        #current_order = Order.query.get(new_order.id)
+        shopping_list = create_shopping_list()
+        for item in shopping_list:
+            order_id = new_order.id
+            product_id = item[0]
+            quantity = item[1]
+            new_order_product = OrderProduct(order_id = order_id, product_id=product_id, quantity=quantity)
+            db.session.add(new_order_product)
+            db.session.commit()
         #new order product here will contain products
         current_customer = Customer.query.get(int(customer_id))
         msg = Message('Order Submission Confirmation',
@@ -121,11 +129,11 @@ Thanks to them, your items will be with you soon.
 
 Thank you for using TrolleyTravellers!'''
         mail.send(msg)
-        order_schema = OrderSchema()
+        order_product_schema = OrderProductSchema()
 
-        return order_schema.jsonify(new_order)
-    except:
-         abort(400)
+        return order_product_schema.jsonify(new_order_product)
+    # except:
+    #      abort(400)
 
 @orders.route('/order_completed', methods=['POST'])
 def set_order_as_completed(order_id):
@@ -135,41 +143,41 @@ def set_order_as_completed(order_id):
     db.session.commit()
     return order_schema.jsonify(new_order)
 
-@orders.route('/create_shopping_list', methods=['POST'])
-def add_product():
-    """
-    ACCESS TO PRODUCT TABLE -> SELECT SPECIFIC PRODUCT USING A NAME -> 
-    ASSIGN A QUANTITY TO THAT PRODUCT -> USE FOREIGN KEY TO ACCESS PRODUCT ID -> 
-    USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
-    """
-    #try:
-        #customer_id = request.json['customer_id']
-    #BODY: list of product names
-    # Validate items: list of prouduct names in shopping list
-    # If in db, retrieve product id, add to shopping list
-    product_names = request.json['product_names']
-    conn = create_connection(database)
-    cur = conn.cursor()
-    shopping_list, initial_shopping_list = [], []
-    cur.execute(f"SELECT id, name FROM product")
-    product_rows = cur.fetchall()
+# @orders.route('/create_shopping_list', methods=['POST'])
+# def add_product():
+#     """
+#     ACCESS TO PRODUCT TABLE -> SELECT SPECIFIC PRODUCT USING A NAME -> 
+#     ASSIGN A QUANTITY TO THAT PRODUCT -> USE FOREIGN KEY TO ACCESS PRODUCT ID -> 
+#     USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
+#     """
+#     #try:
+#         #customer_id = request.json['customer_id']
+#     #BODY: list of product names
+#     # Validate items: list of prouduct names in shopping list
+#     # If in db, retrieve product id, add to shopping list
+#     product_names = request.json['product_names']
+#     conn = create_connection(database)
+#     cur = conn.cursor()
+#     shopping_list, initial_shopping_list = [], []
+#     cur.execute(f"SELECT id, name FROM product")
+#     product_rows = cur.fetchall()
 
-    all_items = {} 
-    for product in product_rows:
-        all_items[product[1]] = str(product[0]) # dictionary (product name: product id)
+#     all_items = {} 
+#     for product in product_rows:
+#         all_items[product[1]] = str(product[0]) # dictionary (product name: product id)
 
-# appends product ids to initial_shopping_list via dictionary
-    for product in product_names:
-        if product in all_items:
-            initial_shopping_list.append(all_items[str(product)]) 
+# # appends product ids to initial_shopping_list via dictionary
+#     for product in product_names:
+#         if product in all_items:
+#             initial_shopping_list.append(all_items[str(product)]) 
             
-    # One column list of product ids, perform counting, deletion and quantity variables
-    shopping_list = [ [product, initial_shopping_list.count(product)] for product 
-    in list(set(initial_shopping_list)) ] # [ [product, quantity], [product, quantity], ...,
-                                          # [product, quantity] ]
-    conn.close()
+#     # One column list of product ids, perform counting, deletion and quantity variables
+#     shopping_list = [ [product, initial_shopping_list.count(product)] for product 
+#     in list(set(initial_shopping_list)) ] # [ [product, quantity], [product, quantity], ...,
+#                                           # [product, quantity] ]
+#     conn.close()
 
-    return json.dumps(shopping_list)
+#     return json.dumps(shopping_list)
     # return json.dumps(product_rows[0][0]) # 1 (product ids)
     # return json.dumps(product_rows[0][1]) # "Whmis Spray Bottle Graduated" (product names)
     # except:
@@ -177,6 +185,7 @@ def add_product():
     #     abort(400)
 
         # {"product_names": ["Yucca", "Rhubarb","Yucca"]}
+        #{"product_names": ["Whmis Spray Bottle Graduated", "Yucca", "Yucca"]}
 
         #ORDER (Assertion for SHOPPING LIST AND PRODUCT LIST)
         ##list of items in shopping basket
