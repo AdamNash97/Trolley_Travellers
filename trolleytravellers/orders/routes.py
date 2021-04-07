@@ -156,21 +156,22 @@ def add_product():
 
     all_items = {} 
     for product in product_rows:
-        all_items[product[1]] = f'{product[0]}' # dictionary (product name: id)
+        all_items[product[1]] = str(product[0]) # dictionary (product name: product id)
 
+# appends product ids to initial_shopping_list via dictionary
     for product in product_names:
         if product in all_items:
-            initial_shopping_list.append(all_items[str(product)])
-
+            initial_shopping_list.append(all_items[str(product)]) 
+            
     # One column list of product ids, perform counting, deletion and quantity variables
-    shopping_list = [ [product, initial_shopping_list.count(product)] for product in list(set(initial_shopping_list)) ] # product, quantity
+    shopping_list = [ [product, initial_shopping_list.count(product)] for product 
+    in list(set(initial_shopping_list)) ] # [ [product, quantity], [product, quantity], ...,
+                                          # [product, quantity] ]
     conn.close()
 
-    # shopping_list_schema = ShoppingListSchema()
-    # return json.dumps(initial_shopping_list) 
     return json.dumps(shopping_list)
-    # return json.dumps(product_rows[0][0]) # 1
-    # return json.dumps(product_rows[0][1]) # "Whmis Spray Bottle Graduated"
+    # return json.dumps(product_rows[0][0]) # 1 (product ids)
+    # return json.dumps(product_rows[0][1]) # "Whmis Spray Bottle Graduated" (product names)
     # except:
     
     #     abort(400)
@@ -190,25 +191,4 @@ def add_product():
         #append customers choice: Order Id: product id
         # Counting for loop for instances of each product id - Count method
         #that geerates quantity values
-
-
-
         # order_111.product_id.append_all(product_id=[18495, 19284, 20495])
-
-
-
-# @orders.route('/add_order', methods=['POST'])
-# def new_order():
-#     try:
-#         order_date = request.json['order_date']
-#         customer_id = request.json['customer_id']
-#         volunteer_id = request.json['volunteer_id']
-#         # quantity = 
-#         status = Status.PENDING
-#         new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id, status=status)
-#         db.session.add(new_order)
-#         db.session.commit()
-#         order_schema = OrderSchema()
-#         return order_schema.jsonify(new_order)
-#     except:
-#             abort(400)
