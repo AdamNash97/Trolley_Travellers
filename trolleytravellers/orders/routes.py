@@ -121,13 +121,23 @@ Thank you for using TrolleyTravellers!'''
     # except:
     #      abort(400)
 
+
 @orders.route('/add_product_to_order_product', methods=['POST'])
 def add_product():
+    """
+    ACCESS TO PRODUCT TABLE -> SELECT SPECIFIC PRODUCT USING A NAME -> 
+    ASSIGN A QUANTITY TO THAT PRODUCT -> USE FOREIGN KEY TO ACCESS PRODUCT ID -> 
+    USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
+    """
     try:
         customer_id = request.json['customer_id']
-
-#ACCESS TO PRODUCT TABLE -> SELECT SPECIFIC PRODUCT USING A NAME 
-# -> ASSIGN A QUANTITY TO THAT PRODUCT -> USE FOREIGN KEY TO ACCESS PRODUCT ID 
-# -> USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
+        item_data = request.json['item']
+        quantity_requested = request.json['quantity']
+        create_connection(database)
+        # cur = conn.cursor()
+        
+        # return cur
+        # cur.execute(f"SELECT id FROM product WHERE name LIKE %{item_data}%") 
+        # conn.close()
     except:
         abort(400)
