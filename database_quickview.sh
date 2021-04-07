@@ -44,7 +44,7 @@ app.app_context().push()
 from trolleytravellers.models import *
 entities = eval(table).query.all()
 for entity in entities:
-	print(entity)
+	print(entity.id, entity)
 EOF
 }
 while :
