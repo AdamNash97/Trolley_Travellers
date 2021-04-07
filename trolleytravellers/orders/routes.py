@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, request
 from trolleytravellers import db, mail
-from trolleytravellers.models import Order, OrderSchema, Status, Customer
+from trolleytravellers.models import Order, OrderSchema, Status, Customer, Volunteer
 from trolleytravellers.main.utils import get_current_date
 from trolleytravellers.orders.utils import find_volunteer_match
 from flask_mail import Message
@@ -96,10 +96,12 @@ def delete_order(id):
 #mock data.
 @orders.route('/place_order_and_find_volunteer', methods=['POST'])
 def place_order_and_find_volunteer():
-    # try:
+    try:
         order_date = get_current_date()
         customer_id = request.json['customer_id']
         volunteer_id = find_volunteer_match(int(customer_id))
+        #Set engaged status to true for matched volunteer
+        (Volunteer.query.get(int(volunteer_id))).engaged = 1
         status = Status.PENDING
         new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id, status=status)
         db.session.add(new_order)
@@ -117,9 +119,18 @@ Thanks to them, your items will be with you soon.
 Thank you for using TrolleyTravellers!'''
         mail.send(msg)
         order_schema = OrderSchema()
+
         return order_schema.jsonify(new_order)
-    # except:
-    #      abort(400)
+    except:
+         abort(400)
+
+@orders.route('/order_completed', methods=['POST'])
+def set_order_as_completed(order_id):
+    current_order = Order.query.get(int(order_id))
+    current_order.status = Status.COMPLETED
+    (current_order.volunteer).engaged = 0
+    db.session.commit()
+    return order_schema.jsonify(new_order)
 
 
 @orders.route('/add_product_to_order_product', methods=['POST'])
@@ -130,10 +141,10 @@ def add_product():
     USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
     """
     try:
-        customer_id = request.json['customer_id']
-        item_data = request.json['item']
-        quantity_requested = request.json['quantity']
-        create_connection(database)
+        # customer_id = request.json['customer_id']
+        # item_data = request.json['item']
+        # quantity_requested = request.json['quantity']
+        # create_connection(database)
         # cur = conn.cursor()
         
         # return cur
