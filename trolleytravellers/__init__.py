@@ -37,6 +37,11 @@ def create_app(config_class=Config):
     from trolleytravellers.products.routes import products
     from trolleytravellers.orders.routes import orders
     from trolleytravellers.errors.error_handlers import errors
+    
+    #Edit
+    from trolleytravellers.auth.routes import auth
+    app.register_blueprint(auth)
+
 
     #Register blueprints
     app.register_blueprint(orders)
@@ -46,6 +51,8 @@ def create_app(config_class=Config):
     app.register_blueprint(main)
     app.register_blueprint(errors)
    
+
+
     return app
 
 

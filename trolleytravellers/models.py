@@ -151,6 +151,9 @@ class Product(db.Model):
 
 
 
+
+
+
 #SCHEMA################################################################ 
 #Create Marshmallow Schema (JSON Serialisable objects that are a mixture of python dictionaries and lists)
 
