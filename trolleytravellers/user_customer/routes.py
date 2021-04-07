@@ -36,7 +36,7 @@ def new_customer():
         customer_schema = CustomerSchema()
         return customer_schema.jsonify(new_customer)
     except:
-         abort(400)
+        abort(400)
 
 @user_customer.route('/add_multiple_customers', methods=['POST'])
 def new_customers():
@@ -60,7 +60,7 @@ def new_customers():
         output = customer_schema.dump(customers)
         return jsonify({'# customers in database' : len(output)})
     except:
-         abort(400)
+        abort(400)
 
 @user_customer.route('/update_customer/<id>', methods=['PUT'])
 def update_customer(id):
@@ -85,7 +85,7 @@ def update_customer(id):
         customer_schema = CustomerSchema()
         return customer_schema.jsonify(customer)
     except:
-         abort(404)
+        abort(404)
 
 @user_customer.route('/delete_customer/<id>', methods=['DELETE'])
 def delete_customer(id):
