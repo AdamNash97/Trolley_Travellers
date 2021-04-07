@@ -2,7 +2,6 @@ from trolleytravellers.models import Customer
 import re, sqlite3
 from sqlite3 import Error
 from flask import request
-import json
 
 database = r"./trolleytravellers/site.db"
 
@@ -44,11 +43,14 @@ def find_volunteer_match(customer_id):
     #Take id and postcode columns from volunteer table.
     cur.execute(f"SELECT id, substr(postcode, 1, {len_postcode}), engaged FROM volunteer;") 
     rows = cur.fetchall()
+    
+    matched_volunteer_id = 0
     for row in rows:
         #If postcode matches and the volunteer is not currently engaged (FALSE=0 in SQL boolean types)
         if row[1] == customer_postcode_first_half and row[2] == 0:
             matched_volunteer_id = int(row[0])
             break
+        
     #Close connection to database
     conn.close()
     return matched_volunteer_id

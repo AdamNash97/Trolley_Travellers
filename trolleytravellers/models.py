@@ -2,6 +2,8 @@ from trolleytravellers import db, ma
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
 from enum import Enum
+from marshmallow_enum import EnumField
+
 
 class Customer(db.Model):
     #__tablename__ = 'customer'
@@ -167,8 +169,10 @@ class OrderProductSchema(ma.SQLAlchemyAutoSchema):
         fields = ("order_id", "product_id", "quantity")
 
 class OrderSchema(ma.SQLAlchemyAutoSchema):
+    type = EnumField(Type, by_value=True)
+
     class Meta:
-        fields = ("order_date", "customer_id", "volunteer_id")
+        fields = ("order_date", "customer_id", "volunteer_id", "status")
 
 class ShoppingListSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -182,10 +186,5 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
 
 
 
-customer_schema = CustomerSchema(many=True)
-volunteer_schema = VolunteerSchema(many=True)
-order_product_schema = OrderProductSchema(many=True)
-order_schema = OrderSchema(many=True)
-product_schema = ProductSchema(many=True)
 
 

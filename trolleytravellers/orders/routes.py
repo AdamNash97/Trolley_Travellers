@@ -97,10 +97,13 @@ def delete_order(id):
 #mock data.
 @orders.route('/place_order_and_find_volunteer', methods=['POST'])
 def place_order_and_find_volunteer():
-    #try:
+    try:
         order_date = get_current_date()
         customer_id = request.json['customer_id']
         volunteer_id = find_volunteer_match(int(customer_id))
+        
+        if volunteer_id == 0:
+            abort(500)
         #Set engaged status to true for matched volunteer
         (Volunteer.query.get(int(volunteer_id))).engaged = 1
         status = Status.PENDING
@@ -109,6 +112,9 @@ def place_order_and_find_volunteer():
         db.session.commit()
         #current_order = Order.query.get(new_order.id)
         shopping_list = create_shopping_list()
+        global new_order_id
+        global new_order_ids
+        new_product_ids = []
         for item in shopping_list:
             order_id = new_order.id
             product_id = item[0]
@@ -116,6 +122,8 @@ def place_order_and_find_volunteer():
             new_order_product = OrderProduct(order_id = order_id, product_id=product_id, quantity=quantity)
             db.session.add(new_order_product)
             db.session.commit()
+            new_order_id = new_order_product.order_id
+            new_product_ids.append(new_order_product.product_id)
         #new order product here will contain products
         current_customer = Customer.query.get(int(customer_id))
         msg = Message('Order Submission Confirmation',
@@ -129,19 +137,26 @@ Thanks to them, your items will be with you soon.
 
 Thank you for using TrolleyTravellers!'''
         mail.send(msg)
-        order_product_schema = OrderProductSchema()
+        order_product_schema = OrderProductSchema(many=True)
+        new_orders_products = []
+        for new_product_id in new_product_ids:
+            # return json.dumps(new_order_id)
+            new_orders_products.append(OrderProduct.query.get(  ( int(new_order_id), int(new_product_id) )  ))
+        output = order_product_schema.dump(new_orders_products)
+        return jsonify({'Receipt' : output})
 
-        return order_product_schema.jsonify(new_order_product)
-    # except:
-    #      abort(400)
+    except:
+         abort(400)
 
-@orders.route('/order_completed', methods=['POST'])
-def set_order_as_completed(order_id):
+@orders.route('/order_completed', methods=['PUT'])
+def set_order_as_completed():
+    order_id = request.json['order_id']
     current_order = Order.query.get(int(order_id))
     current_order.status = Status.COMPLETED
     (current_order.volunteer).engaged = 0
     db.session.commit()
-    return order_schema.jsonify(new_order)
+    order_schema = OrderSchema()
+    return order_schema.jsonify(current_order)
 
 # @orders.route('/create_shopping_list', methods=['POST'])
 # def add_product():
