@@ -191,14 +191,18 @@ def set_order_as_cancelled():
 
     conn = create_connection(database)
     cur = conn.cursor()
-    cancelled_shopping_list = {}
-    cur.execute("SELECT * FROM order_product")
+    cancelled_shopping_list = []
+    cur.execute("SELECT order_id, product_id, quantity FROM order_product")
     order_product_rows = cur.fetchall()
+    # return jsonify(order_product_rows) # [ [order_id, product_id, quantity] ... ]
     for order_product in order_product_rows:
         if order_product[0] == order_id:
-            product_name = (Product.query.get(order_product[0])).name
-            cancelled_shopping_list[product_name] = str(order_product.quantity) # dictionary (product name: quantity)
-            
+            product_name = (Product.query.get(order_product[1])).name # product_id -> product_name
+            product_quantity = order_product[2] # quantity
+            cancelled_shopping_list.append( [ product_name, product_quantity ] )
+            # return json.dumps(order_product) # [7, 105, 2]
+            # return json.dumps(order_product[0]) # 7
+            # return json.dumps(product_name) # "Yucca"
 
     msg = Message('Order Cancellation Confirmation',
                   sender='trolleytravellers@gmail.com',
@@ -211,8 +215,7 @@ Order number: {order_id}
 Your order has been {current_order.status.name}. 
 
 The following items are no longer being processed:
-#PLEASE FIX THIS OZAN IF YOU CAN, CHEERS :))
-{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in cancelled_shopping_list[1])}
+{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in cancelled_shopping_list)}
 
 Thank you for using TrolleyTravellers!'''
 
