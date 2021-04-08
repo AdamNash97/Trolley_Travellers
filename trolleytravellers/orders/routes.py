@@ -145,6 +145,8 @@ Your volunteer will be bringing you the following order to your doorstep:
 
 {newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
 
+It will cost £{round(shopping_list[2], 2)}.
+
 Thank you for using TrolleyTravellers!'''
 
         mail.send(msg)
