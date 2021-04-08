@@ -67,29 +67,30 @@ def create_shopping_list():
     product_names = request.json['product_names']
     conn = create_connection(database)
     cur = conn.cursor()
-    shopping_list, initial_shopping_list = [], []
     cur.execute("SELECT id, name, price FROM product")
-    product_rows = cur.fetchall()
+    product_rows = cur.fetchall() # [ [product_id, product_name, product_price], ..., [product_id, product_name, product_price] ]
 
     all_items = {} 
+    # [ ]
     for product in product_rows:
         all_items[product[1]] = str(product[0]) # dictionary (product name: product id)
         all_items[str(product[0])] = float(product[2]) # dictionary (product id: price)
-    sum_of_shopping_list = 0
     # appends product ids to initial_shopping_list via dictionary
 
-    initial_customer_shopping_list = []
+    shopping_list, initial_shopping_list, initial_customer_shopping_list  = [], [], []
     for product in product_names:
         if product in all_items:
             initial_shopping_list.append(all_items[str(product)]) # appends product ids to initial shopping list
             initial_customer_shopping_list.append(str(product))
+            
+    sum_of_shopping_list = 0
     for item in initial_shopping_list:
         sum_of_shopping_list += all_items[str(item)]
             
     # One column list of product ids, perform counting, deletion and quantity variables
     shopping_list = [ [product, initial_shopping_list.count(product)] for product 
-    in list(set(initial_shopping_list)) ] # [ [product, quantity], [product, quantity], ...,
-                                          # [product, quantity] ]
+                    in list(set(initial_shopping_list)) ] 
+                    # [ [product, quantity], [product, quantity], ..., [product, quantity] ]
     customer_shopping_list = [ [ product, initial_customer_shopping_list.count(product) ] for product
     in list(set( initial_customer_shopping_list)) ] # [ [ product_name, quantity ] ... ]
     conn.close()
