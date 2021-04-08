@@ -145,8 +145,12 @@ Your volunteer will be bringing you the following order to your doorstep:
 
 {newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
 
+<<<<<<< HEAD
 
 Total cost of your shopping: 
+=======
+It will cost £{round(shopping_list[2], 2)}.
+>>>>>>> 3eb6889cfe991fca3fe30e4920d351cf99cb3b4e
 
 Thank you for using TrolleyTravellers!'''
 
