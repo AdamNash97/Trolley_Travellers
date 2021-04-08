@@ -42,7 +42,7 @@ def new_volunteer():
 
 @user_volunteer.route('/add_multiple_volunteers', methods=['POST'])
 def new_volunteers():
-    try:
+    #try:
         jsonBody = request.get_json()
         for json_object in jsonBody:
             email_data = json_object.get('email')
@@ -53,7 +53,8 @@ def new_volunteers():
             postcode_data = json_object.get('postcode')
             house_number_data = json_object.get('house_number')
             engaged_data = 0
-            new_volunteer = Volunteer(email=email_data, username=username_data, password=hashed_password, postcode=postcode_data, house_number=house_number_data, engaged=engaged_data)
+            new_volunteer = Volunteer(email=email_data, username=username_data, password=hashed_password, 
+            postcode=postcode_data, house_number=house_number_data, engaged=engaged_data)
             db.session.add(new_volunteer)
             db.session.commit()
             volunteer_schema = VolunteerSchema()
@@ -62,8 +63,8 @@ def new_volunteers():
         volunteer_schema = VolunteerSchema(many=True)
         output = volunteer_schema.dump(volunteers)
         return jsonify({'# volunteers in database' : len(output)})
-    except:
-         abort(400)
+    # except:
+    #      abort(400)
 
 @user_volunteer.route('/update_volunteer/<id>', methods=['PUT'])
 def update_volunteer(id):
@@ -112,5 +113,4 @@ def update_engaged_status():
         return volunteer_schema.jsonify(volunteer)
     except:
         abort(404)
-
 

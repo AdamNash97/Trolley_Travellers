@@ -7,6 +7,7 @@ from trolleytravellers.orders.utils import find_volunteer_match, create_connecti
 from flask_mail import Message
 database = r"./trolleytravellers/site.db"
 
+
 orders = Blueprint('orders', __name__)
 
 order_schema = OrderSchema(many=True)
@@ -103,6 +104,7 @@ def place_order_and_find_volunteer():
         volunteer_id = find_volunteer_match(int(customer_id))
         
         if volunteer_id == 0:
+            
             abort(500)
         #Set engaged status to true for matched volunteer
         (Volunteer.query.get(int(volunteer_id))).engaged = 1
@@ -115,8 +117,8 @@ def place_order_and_find_volunteer():
         global new_order_id
         global new_order_ids
         new_product_ids = []
-        for item in shopping_list:
-            order_id = new_order.id
+        for item in shopping_list[0]:
+            order_id = new_order.id 
             product_id = item[0]
             quantity = item[1]
             new_order_product = OrderProduct(order_id = order_id, product_id=product_id, quantity=quantity)
@@ -129,13 +131,22 @@ def place_order_and_find_volunteer():
         msg = Message('Order Submission Confirmation',
                   sender='trolleytravellers@gmail.com',
                   recipients=[current_customer.email])
+        newline = "\n"
+# {json.dumps([f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1]])}
         msg.body = f'''Hi {current_customer.username}!
+
+Order number: {order_id}
 
 Your order has been submitted and is now {status.name}. 
 You have been matched with volunteer number {volunteer_id}, who lives in your local area. 
 Thanks to them, your items will be with you soon.
 
+Your volunteer will be bringing you the following order to your doorstep:
+
+{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
+
 Thank you for using TrolleyTravellers!'''
+
         mail.send(msg)
         order_product_schema = OrderProductSchema(many=True)
         new_orders_products = []
@@ -153,6 +164,17 @@ def set_order_as_completed():
     order_id = request.json['order_id']
     current_order = Order.query.get(int(order_id))
     current_order.status = Status.COMPLETED
+    (current_order.volunteer).engaged = 0
+    db.session.commit()
+    order_schema = OrderSchema()
+    return order_schema.jsonify(current_order)
+
+
+@orders.route('/cancel_order', methods=['PUT'])
+def set_order_as_cancelled():
+    order_id = request.json['order_id']
+    current_order = Order.query.get(int(order_id))
+    current_order.status = Status.CANCELLED
     (current_order.volunteer).engaged = 0
     db.session.commit()
     order_schema = OrderSchema()

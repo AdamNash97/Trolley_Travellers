@@ -118,6 +118,7 @@ class Status(Enum):
     PENDING = "PENDING"
     DISPATCHED = "DISPATCHED"
     COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 class Order(db.Model):
     #__tablename__ = 'order'

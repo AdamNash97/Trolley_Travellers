@@ -76,15 +76,23 @@ def create_shopping_list():
         all_items[product[1]] = str(product[0]) # dictionary (product name: product id)
 
     # appends product ids to initial_shopping_list via dictionary
+
+    initial_customer_shopping_list = []
     for product in product_names:
         if product in all_items:
             initial_shopping_list.append(all_items[str(product)]) 
+            initial_customer_shopping_list.append(str(product))
             
     # One column list of product ids, perform counting, deletion and quantity variables
     shopping_list = [ [product, initial_shopping_list.count(product)] for product 
     in list(set(initial_shopping_list)) ] # [ [product, quantity], [product, quantity], ...,
                                           # [product, quantity] ]
+    customer_shopping_list = [ [ product, initial_customer_shopping_list.count(product) ] for product
+    in list(set( initial_customer_shopping_list)) ] # [ [ product_name, quantity ] ... ]
     conn.close()
+    list_of_shopping_lists = [shopping_list, customer_shopping_list]
+    return list_of_shopping_lists
 
-    return shopping_list
+
+
 
