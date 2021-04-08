@@ -34,3 +34,11 @@ def not_found(error):
         "error": 500,
         "message": "General server error"
     }), 500
+
+@errors.app_errorhandler(503)
+def not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 503,
+        "message": "Service unavailable"
+    }), 503

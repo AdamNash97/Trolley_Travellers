@@ -102,7 +102,7 @@ class Status(Enum):
 class Order(db.Model):
     #__tablename__ = 'order'
     id = db.Column(db.Integer, primary_key = True)
-    order_date = db.Column(db.Integer, nullable = False)
+    order_date = db.Column(db.String(10), nullable = False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable = False)
     volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteer.id'), nullable = True)
     status = db.Column(db.Enum(Status), nullable = False)
@@ -151,17 +151,7 @@ class OrderSchema(ma.SQLAlchemyAutoSchema):
     status = EnumField(Status, by_value=True)
     class Meta:
         fields = ("order_date", "customer_id", "volunteer_id", "status")
-
-class ShoppingListSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        fields = ("product_id", "quantity")
          
 class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product
-
-
-
-
-
-

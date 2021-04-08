@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, abort, request
 import json
 from trolleytravellers import db, mail
 from trolleytravellers.models import Order, OrderProduct, OrderSchema, Status, Customer, Volunteer, OrderProductSchema, Product
-from trolleytravellers.main.utils import get_current_date
+from trolleytravellers.main.utils import get_current_date, get_current_date_as_string
 from trolleytravellers.orders.utils import find_volunteer_match, create_connection, create_shopping_list
 from flask_mail import Message
 database = r"./trolleytravellers/site.db"
@@ -19,13 +19,31 @@ def list_orders():
     return jsonify({'order' : output})
     
 @orders.route('/order/<id>', methods=['GET'])
-def list_order():
+def list_order(id):
     try:
         order = Order.query.get(id)
         order_schema = OrderSchema()
         return order_schema.jsonify(order)
     except:
          abort(400)
+
+@orders.route('/customer_order_history/<id>', methods=['GET'])
+def list_customer_order_history(id):
+    conn = create_connection(database)
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM "order"') # quotes required because order is a reserved word.
+    
+    orders = cur.fetchall()
+    customer_order_history = []
+    for order in orders:
+        if str(order[2]) == str(id):
+            customer_order_history.append(order)
+    return json.dumps(customer_order_history)
+    conn.close()
+        
+        # return jsonify.customer_order_history
+    # except:
+    #      abort(400)
 
 @orders.route('/add_order', methods=['POST'])
 def new_order():
@@ -99,13 +117,28 @@ def delete_order(id):
 @orders.route('/place_order_and_find_volunteer', methods=['POST'])
 def place_order_and_find_volunteer():
     try:
-        order_date = get_current_date()
+        order_date = get_current_date_as_string()
         customer_id = request.json['customer_id']
         volunteer_id = find_volunteer_match(int(customer_id))
         
         if volunteer_id == 0:
-            
-            abort(500)
+            current_customer = Customer.query.get(int(customer_id))
+
+            msg = Message('Volunteers Unavailable',
+                  sender='trolleytravellers@gmail.com',
+                  recipients=[current_customer.email])
+            newline = "\n"
+
+            msg.body = f'''
+Hi {current_customer.username}!
+
+Apologies, there are no volunteers currently available! Please try again later!
+
+Thank you for using TrolleyTravellers!'''
+
+            mail.send(msg)
+        
+            abort(503)
         #Set engaged status to true for matched volunteer
         (Volunteer.query.get(int(volunteer_id))).engaged = 1
         status = Status.PENDING
@@ -132,24 +165,35 @@ def place_order_and_find_volunteer():
                   sender='trolleytravellers@gmail.com',
                   recipients=[current_customer.email])
         newline = "\n"
-# {json.dumps([f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1]])}
-        msg.body = f'''Hi {current_customer.username}!
-
+        # {json.dumps([f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1]])}
+        msg.body = f'''
+Hi {current_customer.username}!
 Order number: {order_id}
-
 Your order has been submitted and is now {status.name}. 
 You have been matched with volunteer number {volunteer_id}, who lives in your local area. 
 Thanks to them, your items will be with you soon.
-
 Your volunteer will be bringing you the following order to your doorstep:
-
 {newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
-
 It will cost £{round(shopping_list[2], 2)}.
-
 Thank you for using TrolleyTravellers!'''
 
         mail.send(msg)
+
+        volunteer_message = Message('Customer Request Received',
+                            sender='trolleytravellers@gmail.com',
+                            recipients=[Volunteer.query.get(int(volunteer_id)).email])
+        newline = "\n"
+        volunteer_message.body = f'''
+Hi {(Volunteer.query.get(int(volunteer_id))).username}! 
+A volunteer in your local area has requested your help! The order is as follow:
+
+{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
+It will cost £{round(shopping_list[2], 2)}. Please request this in cash from your customer when dropping it off.
+
+Thank you for your service, without you TrolleyTravellers could not exist!
+        '''
+        mail.send(volunteer_message)
+
         order_product_schema = OrderProductSchema(many=True)
         new_orders_products = []
         for new_product_id in new_product_ids:
@@ -233,61 +277,42 @@ def cancellation_token(token):
 
 #[{"order_id" : "3", "token" : "eyJhbGciOiJIUzUxMiIsImlhdCI6MTYxNzg4MTQ0MywiZXhwIjoxNjE3ODgyMDQzfQ.eyJjdXN0b21lcl9pZCI6NTJ9.pziGFvw6Z0py64xyayOX6UF4Tm0bsrrrHWG2Rhw9OL1Jxzg_A8YAJCO7KwMoLXPCNTzGvGOKH8rroRasOlexKg"}]
 
-# @orders.route('/create_shopping_list', methods=['POST'])
-# def add_product():
-#     """
-#     ACCESS TO PRODUCT TABLE -> SELECT SPECIFIC PRODUCT USING A NAME -> 
-#     ASSIGN A QUANTITY TO THAT PRODUCT -> USE FOREIGN KEY TO ACCESS PRODUCT ID -> 
-#     USE ID AND QUANTITY TO CREATE NEW ORDER_PRODUCT
-#     """
-#     #try:
-#         #customer_id = request.json['customer_id']
-#     #BODY: list of product names
-#     # Validate items: list of prouduct names in shopping list
-#     # If in db, retrieve product id, add to shopping list
-#     product_names = request.json['product_names']
-#     conn = create_connection(database)
-#     cur = conn.cursor()
-#     shopping_list, initial_shopping_list = [], []
-#     cur.execute(f"SELECT id, name FROM product")
-#     product_rows = cur.fetchall()
+@orders.route('/create_shopping_list', methods=['POST'])
+def add_product():
+    try:
+        product_names = request.json['product_names']
+        conn = create_connection(database)
+        cur = conn.cursor()
+        shopping_list, initial_shopping_list = [], []
+        cur.execute("SELECT id, name, price FROM product")
+        product_rows = cur.fetchall()
 
-#     all_items = {} 
-#     for product in product_rows:
-#         all_items[product[1]] = str(product[0]) # dictionary (product name: product id)
+        all_items = {} 
+        for product in product_rows:
+            all_items[product[1]] = str(product[0]) # dictionary (product name: product id)
+            all_items[str(product[0])] = float(product[2]) # dictionary (product id: price)
+        sum_of_shopping_list = 0
+        # appends product ids to initial_shopping_list via dictionary
 
-# # appends product ids to initial_shopping_list via dictionary
-#     for product in product_names:
-#         if product in all_items:
-#             initial_shopping_list.append(all_items[str(product)]) 
-            
-#     # One column list of product ids, perform counting, deletion and quantity variables
-#     shopping_list = [ [product, initial_shopping_list.count(product)] for product 
-#     in list(set(initial_shopping_list)) ] # [ [product, quantity], [product, quantity], ...,
-#                                           # [product, quantity] ]
-#     conn.close()
-
-#     return json.dumps(shopping_list)
-    # return json.dumps(product_rows[0][0]) # 1 (product ids)
-    # return json.dumps(product_rows[0][1]) # "Whmis Spray Bottle Graduated" (product names)
-    # except:
+        initial_customer_shopping_list = []
+        for product in product_names:
+            if product in all_items:
+                initial_shopping_list.append(all_items[str(product)]) # appends product ids to initial shopping list
+                initial_customer_shopping_list.append(str(product))
+        for item in initial_shopping_list:
+            sum_of_shopping_list += all_items[str(item)]
+                
+        # One column list of product ids, perform counting, deletion and quantity variables
+        shopping_list = [ [product, initial_shopping_list.count(product)] for product 
+        in list(set(initial_shopping_list)) ] # [ [product, quantity], [product, quantity], ...,[product, quantity] ]
+        
+        customer_shopping_list = [ [ product, initial_customer_shopping_list.count(product) ] for product
+        in list(set( initial_customer_shopping_list)) ] # [ [ product_name, quantity ] ... ]
+        conn.close()
+        list_of_shopping_lists = [shopping_list, customer_shopping_list, sum_of_shopping_list]
+        return json.dumps(list_of_shopping_lists[1])
+        
+    except:
     
-    #     abort(400)
+        abort(400)
 
-        # {"product_names": ["Yucca", "Rhubarb","Yucca"]}
-        #{"customer_id" : "51", "product_names": ["Whmis Spray Bottle Graduated", "Yucca", "Yucca"]}
-
-        #ORDER (Assertion for SHOPPING LIST AND PRODUCT LIST)
-        ##list of items in shopping basket
-        ###Prodcuts inventory
-
-        #ORDER PRODUCT(Assertion between Prodcut list and order)
-        ##Order already been made
-        ###Prodcuts inventory
-
-        #SHOPPING_LIST (tuple -> order id: product id)
-        #OPEN ORDER REQUEST - GENERATES ORDER ID
-        #append customers choice: Order Id: product id
-        # Counting for loop for instances of each product id - Count method
-        #that geerates quantity values
-        # order_111.product_id.append_all(product_id=[18495, 19284, 20495])

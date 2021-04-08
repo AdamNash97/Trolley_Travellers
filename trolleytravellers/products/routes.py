@@ -12,7 +12,7 @@ def list_products():
     return jsonify({'product' : output})
     
 @products.route('/product/<id>', methods=['GET'])
-def list_product():
+def list_product(id):
     try:
         product = Product.query.get(id)
         product_schema = ProductSchema()

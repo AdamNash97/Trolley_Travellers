@@ -96,4 +96,3 @@ def create_shopping_list():
     list_of_shopping_lists = [shopping_list, customer_shopping_list, sum_of_shopping_list]
     return list_of_shopping_lists
 
-
