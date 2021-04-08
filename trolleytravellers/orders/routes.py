@@ -145,6 +145,9 @@ Your volunteer will be bringing you the following order to your doorstep:
 
 {newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
 
+
+Total cost of your shopping: 
+
 Thank you for using TrolleyTravellers!'''
 
         mail.send(msg)
@@ -154,8 +157,8 @@ Thank you for using TrolleyTravellers!'''
             # return json.dumps(new_order_id)
             new_orders_products.append(OrderProduct.query.get(  ( int(new_order_id), int(new_product_id) )  ))
         output = order_product_schema.dump(new_orders_products)
-        return jsonify({'Receipt' : output})
-
+        token = current_customer.get_cancellation_token()
+        return jsonify([{'Receipt' : output}, {'Token' : token}])
     except:
          abort(400)
 
@@ -170,15 +173,29 @@ def set_order_as_completed():
     return order_schema.jsonify(current_order)
 
 
-@orders.route('/cancel_order', methods=['PUT'])
+@orders.route('/order_cancelled', methods=['PUT'])
 def set_order_as_cancelled():
-    order_id = request.json['order_id']
+    jsonBody = request.get_json()
+    global token_to_check
+    for json_object in jsonBody:
+        token_to_check = json_object.get('token')
+        order_id = json_object.get('order_id')
+    cancellation_token(token_to_check)
     current_order = Order.query.get(int(order_id))
     current_order.status = Status.CANCELLED
     (current_order.volunteer).engaged = 0
     db.session.commit()
     order_schema = OrderSchema()
     return order_schema.jsonify(current_order)
+
+#@orders.route('/order_cancelled/<token>', methods=['GET', 'POST'])
+def cancellation_token(token):
+    current_customer_token = Customer.verify_cancellation_token(token)
+    if current_customer_token is None:
+        abort(403)
+    return current_customer_token
+
+
 
 # @orders.route('/create_shopping_list', methods=['POST'])
 # def add_product():

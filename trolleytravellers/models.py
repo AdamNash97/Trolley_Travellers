@@ -23,8 +23,8 @@ class Customer(db.Model):
         self.postcode = postcode
         self.house_number = house_number
 
-    #Create a password reset token that lasts for 30 minutes.
-    def get_reset_token(self, expires_sec=1800):
+    #Create a order cancellation token that lasts for 120 minutes.
+    def get_cancellation_token(self, expires_sec=600):
         #Creates serializer.
         s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
         #Pass in current user id as payload. Return token.
@@ -33,7 +33,7 @@ class Customer(db.Model):
     #Doesn't do anything with instance of user, doesn't use self variable, so needs
     #to be declared as a static method. Will verify token created in function above.
     @staticmethod
-    def verify_reset_token(token):
+    def verify_cancellation_token(token):
         #Creates serializer.
         s = Serializer(current_app.config['SECRET_KEY'])
         #Token could be expired or invalid if after 30 mins, so use a try-catch block.
@@ -67,27 +67,6 @@ class Volunteer(db.Model):
         self.house_number = house_number
         self.engaged = engaged
     
-     #Create a password reset token that lasts for 30 minutes.
-    def get_reset_token(self, expires_sec=1800):
-        #Creates serializer.
-        s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
-        #Pass in current user id as payload. Return token.
-        return s.dumps({'volunteer_id': self.id}).decode('utf-8')
-
-    #Doesn't do anything with instance of user, doesn't use self variable, so needs
-    #to be declared as a static method. Will verify token created in function above.
-    @staticmethod
-    def verify_reset_token(token):
-        #Creates serializer.
-        s = Serializer(current_app.config['SECRET_KEY'])
-        #Token could be expired or invalid if after 30 mins, so use a try-catch block.
-        try:
-            volunteer_id = s.loads(token)['volunteer_id']
-        except:
-            return None
-        #Return customer with customer id if successful.
-        return Volunteer.query.get(volunteer_id)
-
     def __repr__(self):
         return f"Volunteer('{self.email}', '{self.username}', '{self.password}', '{self.postcode}', '{self.house_number}', '{self.engaged}')"
 
