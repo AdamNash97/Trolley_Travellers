@@ -6,7 +6,6 @@ from marshmallow_enum import EnumField
 
 
 class Customer(db.Model):
-    #__tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key = True)
     email = db.Column(db.String(80), unique = True, nullable = False)
     username = db.Column(db.String(40), unique = True, nullable = False)
@@ -23,15 +22,15 @@ class Customer(db.Model):
         self.postcode = postcode
         self.house_number = house_number
 
-    #Create a order cancellation token that lasts for 120 minutes.
-    def get_cancellation_token(self, expires_sec=600):
-        #Creates serializer.
+    # Create a order cancellation token that lasts for 120 minutes.
+    def get_cancellation_token(self, expires_sec=7800):
+        # Creates serializer.
         s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
-        #Pass in current user id as payload. Return token.
+        # Pass in current user id as payload. Return token.
         return s.dumps({'customer_id': self.id}).decode('utf-8')
 
-    #Doesn't do anything with instance of user, doesn't use self variable, so needs
-    #to be declared as a static method. Will verify token created in function above.
+    # Doesn't do anything with instance of user, doesn't use self variable, so needs
+    # to be declared as a static method. Will verify token created in function above.
     @staticmethod
     def verify_cancellation_token(token):
         #Creates serializer.
@@ -48,7 +47,6 @@ class Customer(db.Model):
         return f"Customer('{self.email}', '{self.username}', '{self.password}', '{self.postcode}', '{self.house_number}')"
 
 class Volunteer(db.Model):
-    #__tablename__ = 'volunteer'
     id = db.Column(db.Integer, primary_key = True)
     email = db.Column(db.String(80), unique = True, nullable = False)
     username = db.Column(db.String(40), unique = True, nullable = False)
@@ -73,7 +71,6 @@ class Volunteer(db.Model):
 
 # Association table for many-to-many relationship to link left (order) table and right (product) table
 class OrderProduct(db.Model):
-    #__tablename__ = 'order_product'
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable = False, primary_key = True)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable = False, primary_key = True)
     quantity = db.Column(db.Integer, nullable = False)
@@ -92,7 +89,7 @@ class OrderProduct(db.Model):
     def __repr__(self):
         return f"Order('{self.order_id}', '{self.product_id}', '{self.quantity}')"
 
-# not a table, rather it's for the enum data type below this class
+# Not a table, rather it's for the enum data type below this class
 class Status(Enum):
     PENDING = "PENDING"
     DISPATCHED = "DISPATCHED"
@@ -100,13 +97,11 @@ class Status(Enum):
     CANCELLED = "CANCELLED"
 
 class Order(db.Model):
-    #__tablename__ = 'order'
     id = db.Column(db.Integer, primary_key = True)
     order_date = db.Column(db.String(10), nullable = False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable = False)
     volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteer.id'), nullable = True)
     status = db.Column(db.Enum(Status), nullable = False)
-    # Defining relationship
     products = db.relationship("OrderProduct", backref="order")
 
     def __init__(self, order_date, customer_id, volunteer_id, status):
@@ -119,7 +114,6 @@ class Order(db.Model):
         return f"Order('{self.order_date}', '{self.customer_id}', '{self.volunteer_id}', '{self.status}')"
 
 class Product(db.Model):
-    #__tablename__ = 'product'
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Float)
     name = db.Column(db.String(80))
@@ -131,8 +125,6 @@ class Product(db.Model):
     def __repr__(self):
         return f"Product('{self.price}', '{self.name}')"
 
-
-#SCHEMA################################################################ 
 #Create Marshmallow Schema (JSON Serialisable objects that are a mixture of python dictionaries and lists)
 
 class CustomerSchema(ma.SQLAlchemyAutoSchema):

@@ -2,22 +2,26 @@ from flask import Blueprint, jsonify, abort, request
 import json
 from trolleytravellers import db, mail
 from trolleytravellers.models import Order, OrderProduct, OrderSchema, Status, Customer, Volunteer, OrderProductSchema, Product
-from trolleytravellers.main.utils import get_current_date, get_current_date_as_string
+from trolleytravellers.main.utils import get_current_date_as_string
 from trolleytravellers.orders.utils import find_volunteer_match, create_connection, create_shopping_list
 from flask_mail import Message
-database = r"./trolleytravellers/site.db"
-
 
 orders = Blueprint('orders', __name__)
 
+# Read in database link
+database = r"./trolleytravellers/site.db"
+
+# Order schema initialisation to be used multiple times in this file
 order_schema = OrderSchema(many=True)
 
+# List all orders in the database
 @orders.route('/order_list', methods=['GET'])
 def list_orders():
     orders = Order.query.all()
     output = order_schema.dump(orders)
     return jsonify({'order' : output})
-    
+
+# Display all columns of a specific order
 @orders.route('/order/<id>', methods=['GET'])
 def list_order(id):
     try:
@@ -27,24 +31,26 @@ def list_order(id):
     except:
          abort(400)
 
+# List all orders by a particular customer
 @orders.route('/customer_order_history/<id>', methods=['GET'])
 def list_customer_order_history(id):
-    conn = create_connection(database)
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM "order"') # quotes required because order is a reserved word.
-    
-    orders = cur.fetchall()
-    customer_order_history = []
-    for order in orders:
-        if str(order[2]) == str(id):
-            customer_order_history.append(order)
-    return json.dumps(customer_order_history)
-    conn.close()
-        
-        # return jsonify.customer_order_history
-    # except:
-    #      abort(400)
+    try:
+        conn = create_connection(database)
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM "order"') # quotes required because order is a reserved word.
+        orders = cur.fetchall()
+        customer_order_history = []
+        for order in orders:
+            if str(order[2]) == str(id):
+                customer_order_history.append(order)
+        conn.close()
+        newline = "\n"
+        return newline.join(f"Order ID: {order_id}, Date: {order_date}, Customer ID: {customer_id}, Volunteer ID: {volunteer_id}, Order Status: {order_status}" 
+        for order_id, order_date, customer_id, volunteer_id, order_status in customer_order_history)
+    except:
+        abort(400)
 
+# Route for adding an order
 @orders.route('/add_order', methods=['POST'])
 def new_order():
     try:
@@ -60,6 +66,7 @@ def new_order():
     except:
          abort(400)
 
+# Route for adding multiple orders
 @orders.route('/add_multiple_orders', methods=['POST'])
 def new_orders():
     try:
@@ -80,7 +87,7 @@ def new_orders():
     except:
         abort(400)
 
-
+# Update existing order by id
 @orders.route('/update_order/<id>', methods=['PUT'])
 def update_order(id):
     try:
@@ -99,6 +106,7 @@ def update_order(id):
     except:
          abort(404)
 
+# Delete existing order by id
 @orders.route('/delete_order/<id>', methods=['DELETE'])
 def delete_order(id):
     try:
@@ -110,10 +118,10 @@ def delete_order(id):
     except:
         abort(404)
 
-#Just need to pass in a customer_id in the body when making the request
-#Will later need to add in if/else statement to handle the case when there
-#are no matching volunteers, but for now we are guaranteed a match using our
-#mock data.
+"""
+Super route which generates a volunteer-customer match AND creates an order AND sends emails to the 
+parties involved to let them know about their order.
+"""
 @orders.route('/place_order_and_find_volunteer', methods=['POST'])
 def place_order_and_find_volunteer():
     try:
@@ -165,7 +173,6 @@ Thank you for using TrolleyTravellers!'''
                   sender='trolleytravellers@gmail.com',
                   recipients=[current_customer.email])
         newline = "\n"
-        # {json.dumps([f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1]])}
         msg.body = f'''
 Hi {current_customer.username}!
 Order number: {order_id}
@@ -205,6 +212,7 @@ Thank you for your service, without you TrolleyTravellers could not exist!
     except:
          abort(400)
 
+# Mark order as completed by order_id using json input body
 @orders.route('/order_completed', methods=['PUT'])
 def set_order_as_completed():
     order_id = request.json['order_id']
@@ -215,7 +223,7 @@ def set_order_as_completed():
     order_schema = OrderSchema()
     return order_schema.jsonify(current_order)
 
-
+# Mark order as cancelled passing order_id using json input body
 @orders.route('/order_cancelled', methods=['PUT'])
 def set_order_as_cancelled():
     jsonBody = request.get_json()
@@ -237,16 +245,12 @@ def set_order_as_cancelled():
     cur = conn.cursor()
     cancelled_shopping_list = []
     cur.execute("SELECT order_id, product_id, quantity FROM order_product")
-    order_product_rows = cur.fetchall()
-    # return jsonify(order_product_rows) # [ [order_id, product_id, quantity] ... ]
+    order_product_rows = cur.fetchall() # [ [order_id, product_id, quantity] ... ]
     for order_product in order_product_rows:
         if order_product[0] == order_id:
             product_name = (Product.query.get(order_product[1])).name # product_id -> product_name
-            product_quantity = order_product[2] # quantity
+            product_quantity = order_product[2] 
             cancelled_shopping_list.append( [ product_name, product_quantity ] )
-            # return json.dumps(order_product) # [7, 105, 2]
-            # return json.dumps(order_product[0]) # 7
-            # return json.dumps(product_name) # "Yucca"
 
     msg = Message('Order Cancellation Confirmation',
                   sender='trolleytravellers@gmail.com',
@@ -268,15 +272,14 @@ Thank you for using TrolleyTravellers!'''
     return order_schema.jsonify(current_order)
 
 
-#@orders.route('/order_cancelled/<token>', methods=['GET', 'POST'])
+# used in '/order_cancelled' route. Checks if the current customer is within cancellation period, if not throws 403 error
 def cancellation_token(token):
     current_customer_token = Customer.verify_cancellation_token(token)
     if current_customer_token is None:
         abort(403)
     return current_customer_token
 
-#[{"order_id" : "3", "token" : "eyJhbGciOiJIUzUxMiIsImlhdCI6MTYxNzg4MTQ0MywiZXhwIjoxNjE3ODgyMDQzfQ.eyJjdXN0b21lcl9pZCI6NTJ9.pziGFvw6Z0py64xyayOX6UF4Tm0bsrrrHWG2Rhw9OL1Jxzg_A8YAJCO7KwMoLXPCNTzGvGOKH8rroRasOlexKg"}]
-
+# Generates a shopping list to insert into order_product table
 @orders.route('/create_shopping_list', methods=['POST'])
 def add_product():
     try:
@@ -313,6 +316,4 @@ def add_product():
         return json.dumps(list_of_shopping_lists[1])
         
     except:
-    
         abort(400)
-

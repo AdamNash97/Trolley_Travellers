@@ -6,6 +6,10 @@ database = r"./trolleytravellers/site.db"
 
 @main.route('/customer_login', methods=['GET', 'POST'])
 def customer_login():
+    """ Checks the whether a username and password is found in the customer database and returns whether \
+    the user is logged in or not.
+    """
+
     json_body = request.get_json()
 
     customer_username, customer_password = "", ""
@@ -14,7 +18,6 @@ def customer_login():
         customer_username = json_object.get('username')
         customer_password = json_object.get('password')
 
-    print(customer_username)
     logged_in = is_authenticated_customer(customer_username, customer_password)
     failed_login = 'Login details incorrect, or no account found.'
     if logged_in:
@@ -22,9 +25,13 @@ def customer_login():
     else:
         return jsonify({'Login Failure' : failed_login })
 
-            
+
 @main.route('/volunteer_login', methods=['GET', 'POST'])
 def volunteer_login():
+    """ Checks the whether a username and password is found in the volunteer database and returns whether \
+    the user is logged in or not.
+    """
+
     json_body = request.get_json()
 
     volunteer_username, volunteer_password = "", ""
@@ -41,5 +48,3 @@ def volunteer_login():
     else:
         return jsonify({'Login Failure' : failed_login })
 
-
-    
