@@ -1,10 +1,15 @@
 from flask import Blueprint, jsonify, abort, request 
 import json
-from trolleytravellers import db, mail
-from trolleytravellers.models import Order, OrderProduct, OrderSchema, Status, Customer, Volunteer, OrderProductSchema, Product
+from trolleytravellers import db
+from trolleytravellers.models import (Order, OrderProduct, OrderSchema, Status, Customer, Volunteer, 
+OrderProductSchema, Product)
 from trolleytravellers.main.utils import get_current_date_as_string
-from trolleytravellers.orders.utils import find_volunteer_match, create_connection, create_shopping_list
-from flask_mail import Message
+from trolleytravellers.orders.utils import ( create_new_order_products, find_volunteer_match, create_connection, create_shopping_list,
+ send_volunteer_unavailable_email, send_customer_confirmed_email, 
+ send_volunteer_confirmed_email, 
+ cancellation_token, send_order_cancellation_email, 
+ create_new_order_products)
+
 
 orders = Blueprint('orders', __name__)
 
@@ -128,25 +133,10 @@ def place_order_and_find_volunteer():
         order_date = get_current_date_as_string()
         customer_id = request.json['customer_id']
         volunteer_id = find_volunteer_match(int(customer_id))
-        
+        #If there's no volunteer currently available:
+        current_customer = Customer.query.get(int(customer_id))
         if volunteer_id == 0:
-            current_customer = Customer.query.get(int(customer_id))
-
-            msg = Message('Volunteers Unavailable',
-                  sender='trolleytravellers@gmail.com',
-                  recipients=[current_customer.email])
-            newline = "\n"
-
-            msg.body = f'''
-Hi {current_customer.username}!
-
-Apologies, there are no volunteers currently available! Please try again later!
-
-Thank you for using TrolleyTravellers!'''
-
-            mail.send(msg)
-        
-            abort(503)
+            send_volunteer_unavailable_email(current_customer)
         #Set engaged status to true for matched volunteer
         (Volunteer.query.get(int(volunteer_id))).engaged = 1
         status = Status.PENDING
@@ -158,54 +148,15 @@ Thank you for using TrolleyTravellers!'''
         global new_order_id
         global new_order_ids
         new_product_ids = []
-        for item in shopping_list[0]:
-            order_id = new_order.id 
-            product_id = item[0]
-            quantity = item[1]
-            new_order_product = OrderProduct(order_id = order_id, product_id=product_id, quantity=quantity)
-            db.session.add(new_order_product)
-            db.session.commit()
-            new_order_id = new_order_product.order_id
-            new_product_ids.append(new_order_product.product_id)
+        order_id = new_order.id 
+        values = create_new_order_products(new_product_ids, shopping_list, new_order)
         #new order product here will contain products
-        current_customer = Customer.query.get(int(customer_id))
-        msg = Message('Order Submission Confirmation',
-                  sender='trolleytravellers@gmail.com',
-                  recipients=[current_customer.email])
-        newline = "\n"
-        msg.body = f'''
-Hi {current_customer.username}!
-Order number: {order_id}
-Your order has been submitted and is now {status.name}. 
-You have been matched with volunteer number {volunteer_id}, who lives in your local area. 
-Thanks to them, your items will be with you soon.
-Your volunteer will be bringing you the following order to your doorstep:
-{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
-It will cost £{round(shopping_list[2], 2)}.
-Thank you for using TrolleyTravellers!'''
-
-        mail.send(msg)
-
-        volunteer_message = Message('Customer Request Received',
-                            sender='trolleytravellers@gmail.com',
-                            recipients=[Volunteer.query.get(int(volunteer_id)).email])
-        newline = "\n"
-        volunteer_message.body = f'''
-Hi {(Volunteer.query.get(int(volunteer_id))).username}! 
-A volunteer in your local area has requested your help! The order is as follow:
-
-{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
-It will cost £{round(shopping_list[2], 2)}. Please request this in cash from your customer when dropping it off.
-
-Thank you for your service, without you TrolleyTravellers could not exist!
-        '''
-        mail.send(volunteer_message)
-
+        send_customer_confirmed_email(current_customer, order_id, status, volunteer_id, shopping_list)
+        send_volunteer_confirmed_email(volunteer_id, shopping_list)
         order_product_schema = OrderProductSchema(many=True)
         new_orders_products = []
-        for new_product_id in new_product_ids:
-            # return json.dumps(new_order_id)
-            new_orders_products.append(OrderProduct.query.get(  ( int(new_order_id), int(new_product_id) )  ))
+        for new_product_id in values[2]:
+            new_orders_products.append(OrderProduct.query.get(  ( int(values[1]), int(new_product_id) )  ))
         output = order_product_schema.dump(new_orders_products)
         token = current_customer.get_cancellation_token()
         return jsonify([{'Receipt' : output}, {'Token' : token}])
@@ -215,69 +166,52 @@ Thank you for your service, without you TrolleyTravellers could not exist!
 # Mark order as completed by order_id using json input body
 @orders.route('/order_completed', methods=['PUT'])
 def set_order_as_completed():
-    order_id = request.json['order_id']
-    current_order = Order.query.get(int(order_id))
-    current_order.status = Status.COMPLETED
-    (current_order.volunteer).engaged = 0
-    db.session.commit()
-    order_schema = OrderSchema()
-    return order_schema.jsonify(current_order)
+    try:
+        order_id = request.json['order_id']
+        current_order = Order.query.get(int(order_id))
+        current_order.status = Status.COMPLETED
+        (current_order.volunteer).engaged = 0
+        db.session.commit()
+        order_schema = OrderSchema()
+        return order_schema.jsonify(current_order)
+    except:
+         abort(400)
 
 # Mark order as cancelled passing order_id using json input body
 @orders.route('/order_cancelled', methods=['PUT'])
 def set_order_as_cancelled():
-    jsonBody = request.get_json()
-    global token_to_check
+    try:
+        jsonBody = request.get_json()
+        global token_to_check
 
-    for json_object in jsonBody:
-        token_to_check = json_object.get('token')
-        order_id = json_object.get('order_id')
+        for json_object in jsonBody:
+            token_to_check = json_object.get('token')
+            order_id = json_object.get('order_id')
 
-    cancellation_token(token_to_check)
-    current_order = Order.query.get(int(order_id))
-    current_order.status = Status.CANCELLED
-    (current_order.volunteer).engaged = 0
-    db.session.commit()
-    current_customer = Customer.query.get(current_order.customer_id)
-    current_volunteer = Volunteer.query.get(current_order.volunteer_id)
+        cancellation_token(token_to_check)
+        current_order = Order.query.get(int(order_id))
+        current_order.status = Status.CANCELLED
+        (current_order.volunteer).engaged = 0
+        db.session.commit()
+        current_customer = Customer.query.get(current_order.customer_id)
+        current_volunteer = Volunteer.query.get(current_order.volunteer_id)
 
-    conn = create_connection(database)
-    cur = conn.cursor()
-    cancelled_shopping_list = []
-    cur.execute("SELECT order_id, product_id, quantity FROM order_product")
-    order_product_rows = cur.fetchall() # [ [order_id, product_id, quantity] ... ]
-    for order_product in order_product_rows:
-        if order_product[0] == order_id:
-            product_name = (Product.query.get(order_product[1])).name # product_id -> product_name
-            product_quantity = order_product[2] 
-            cancelled_shopping_list.append( [ product_name, product_quantity ] )
-
-    msg = Message('Order Cancellation Confirmation',
-                  sender='trolleytravellers@gmail.com',
-                  recipients=[current_customer.email, current_volunteer.email])
-    newline = "\n"
-    msg.body = f'''Hi!
-
-Order number: {order_id}
-
-Your order has been {current_order.status.name}. 
-
-The following items are no longer being processed:
-{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in cancelled_shopping_list)}
-
-Thank you for using TrolleyTravellers!'''
-
-    mail.send(msg)
-    order_schema = OrderSchema()
-    return order_schema.jsonify(current_order)
-
-
-# used in '/order_cancelled' route. Checks if the current customer is within cancellation period, if not throws 403 error
-def cancellation_token(token):
-    current_customer_token = Customer.verify_cancellation_token(token)
-    if current_customer_token is None:
-        abort(403)
-    return current_customer_token
+        conn = create_connection(database)
+        cur = conn.cursor()
+        cancelled_shopping_list = []
+        cur.execute("SELECT order_id, product_id, quantity FROM order_product")
+        order_product_rows = cur.fetchall() # [ [order_id, product_id, quantity] ... ]
+        for order_product in order_product_rows:
+            if int(order_product[0]) == int(order_id):
+                product_name = (Product.query.get(int(order_product[1]))).name # product_id -> product_name
+                product_quantity = order_product[2] 
+                cancelled_shopping_list.append( [ product_name, product_quantity ] )
+        
+        send_order_cancellation_email(current_customer, order_id, current_volunteer, current_order, cancelled_shopping_list)
+        order_schema = OrderSchema()
+        return order_schema.jsonify(current_order)
+    except:
+         abort(400)
 
 # Generates a shopping list to insert into order_product table
 @orders.route('/create_shopping_list', methods=['POST'])

@@ -1,7 +1,10 @@
-from trolleytravellers.models import Customer
+from trolleytravellers.models import Customer, Volunteer, OrderProduct
+from trolleytravellers import db
 import re, sqlite3
 from sqlite3 import Error
-from flask import request
+from flask import request, abort
+from trolleytravellers import mail
+from flask_mail import Message
 
 database = r"./trolleytravellers/site.db"
 
@@ -90,3 +93,90 @@ def create_shopping_list():
     # list of lists which are lists of lists to be used in orders route to create an order.
     return list_of_shopping_lists
 
+def send_volunteer_unavailable_email(current_customer):
+    msg = Message('Volunteers Unavailable',
+                  sender='trolleytravellers@gmail.com',
+                  recipients=[current_customer.email])
+    newline = "\n"
+
+    msg.body = f'''
+Hi {current_customer.username}!
+
+Apologies, there are no volunteers currently available! Please try again later!
+
+Thank you for using TrolleyTravellers!'''
+
+    mail.send(msg)
+        
+    return abort(503)
+
+def send_customer_confirmed_email(current_customer, order_id, status, volunteer_id, shopping_list):
+    msg = Message('Order Submission Confirmation',
+                  sender='trolleytravellers@gmail.com',
+                  recipients=[current_customer.email])
+    newline = "\n"
+    msg.body = f'''
+Hi {current_customer.username}!
+Order number: {order_id}
+Your order has been submitted and is now {status.name}. 
+You have been matched with volunteer number {volunteer_id}, who lives in your local area. 
+Thanks to them, your items will be with you soon.
+Your volunteer will be bringing you the following order to your doorstep:
+{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
+It will cost £{round(shopping_list[2], 2)}.
+Thank you for using TrolleyTravellers!'''
+
+    return mail.send(msg)
+
+def send_volunteer_confirmed_email(volunteer_id, shopping_list):
+    volunteer_message = Message('Customer Request Received',
+                            sender='trolleytravellers@gmail.com',
+                            recipients=[Volunteer.query.get(int(volunteer_id)).email])
+    newline = "\n"
+    volunteer_message.body = f'''
+Hi {(Volunteer.query.get(int(volunteer_id))).username}! 
+A customer in your local area has requested your help! The order is as follows:
+
+{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
+It will cost £{round(shopping_list[2], 2)}. Please request this in cash from your customer when dropping it off.
+
+Thank you for your service, without you TrolleyTravellers could not exist!
+        '''
+    return mail.send(volunteer_message)
+
+def send_order_cancellation_email(current_customer, order_id, current_volunteer, current_order, cancelled_shopping_list):
+    msg = Message('Order Cancellation Confirmation',
+                  sender='trolleytravellers@gmail.com',
+                  recipients=[current_customer.email, current_volunteer.email])
+    newline = "\n"
+    msg.body = f'''Hi!
+
+Order number: {order_id}
+
+Your order has been {current_order.status.name}. 
+
+The following items are no longer being processed:
+{newline.join(f"Number of {product_name}: {product_quantity}" for product_name, product_quantity in cancelled_shopping_list)}
+
+Thank you for using TrolleyTravellers!'''
+
+    return mail.send(msg)
+
+# used in '/order_cancelled' route. Checks if the current customer is within cancellation period, if not throws 403 error
+def cancellation_token(token):
+    current_customer_token = Customer.verify_cancellation_token(token)
+    if current_customer_token is None:
+        abort(403)
+    return current_customer_token
+
+def create_new_order_products(new_product_ids, shopping_list, new_order):
+    for item in shopping_list[0]:
+            order_id = new_order.id 
+            product_id = item[0]
+            quantity = item[1]
+            new_order_product = OrderProduct(order_id = order_id, product_id=product_id, quantity=quantity)
+            db.session.add(new_order_product)
+            db.session.commit()
+            new_order_id = new_order_product.order_id
+            new_product_ids.append(new_order_product.product_id)
+    return (order_id, new_order_id, new_product_ids, new_order_id)
