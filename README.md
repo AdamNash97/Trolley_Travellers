@@ -45,7 +45,7 @@ FYI: You may have to change the 'order_id' etc. passed in the body depending on 
 To run the shell script, in your terminal, please run:
 1) 'chmod +x database_quickview.sh'
 2) './database_quickview.sh'
-Note: You may have to change the interpreter variable in the file from 'python3' to 'python' in order to gain permission to run the script if you only have one version of python specified on you PATH variable, as opposed to many copies (python 2,3 etc.)
+Note: You may have to change the interpreter variable in the file from 'python3' to 'python' in order to gain permission to run the script if you only have one version of python specified on your PATH variable, as opposed to many copies (python 2,3 etc.)
 
 
 
