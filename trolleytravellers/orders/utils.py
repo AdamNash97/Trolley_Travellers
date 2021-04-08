@@ -97,5 +97,3 @@ def create_shopping_list():
     return list_of_shopping_lists
 
 
-
-

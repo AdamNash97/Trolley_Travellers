@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, abort, request 
 import json
 from trolleytravellers import db, mail
-from trolleytravellers.models import Order, OrderProduct, OrderSchema, Status, Customer, Volunteer, OrderProductSchema
+from trolleytravellers.models import Order, OrderProduct, OrderSchema, Status, Customer, Volunteer, OrderProductSchema, Product
 from trolleytravellers.main.utils import get_current_date
 from trolleytravellers.orders.utils import find_volunteer_match, create_connection, create_shopping_list
 from flask_mail import Message
@@ -145,12 +145,7 @@ Your volunteer will be bringing you the following order to your doorstep:
 
 {newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in shopping_list[1])}
 
-<<<<<<< HEAD
-
-Total cost of your shopping: 
-=======
 It will cost £{round(shopping_list[2], 2)}.
->>>>>>> 3eb6889cfe991fca3fe30e4920d351cf99cb3b4e
 
 Thank you for using TrolleyTravellers!'''
 
@@ -181,16 +176,50 @@ def set_order_as_completed():
 def set_order_as_cancelled():
     jsonBody = request.get_json()
     global token_to_check
+
     for json_object in jsonBody:
         token_to_check = json_object.get('token')
         order_id = json_object.get('order_id')
+
     cancellation_token(token_to_check)
     current_order = Order.query.get(int(order_id))
     current_order.status = Status.CANCELLED
     (current_order.volunteer).engaged = 0
     db.session.commit()
+    current_customer = Customer.query.get(current_order.customer_id)
+    current_volunteer = Volunteer.query.get(current_order.volunteer_id)
+
+    conn = create_connection(database)
+    cur = conn.cursor()
+    cancelled_shopping_list = {}
+    cur.execute("SELECT * FROM order_product")
+    order_product_rows = cur.fetchall()
+    for order_product in order_product_rows:
+        if order_product[0] == order_id:
+            product_name = (Product.query.get(order_product[0])).name
+            cancelled_shopping_list[product_name] = str(order_product.quantity) # dictionary (product name: quantity)
+            
+
+    msg = Message('Order Cancellation Confirmation',
+                  sender='trolleytravellers@gmail.com',
+                  recipients=[current_customer.email, current_volunteer.email])
+    newline = "\n"
+    msg.body = f'''Hi!
+
+Order number: {order_id}
+
+Your order has been {current_order.status.name}. 
+
+The following items are no longer being processed:
+#PLEASE FIX THIS OZAN IF YOU CAN, CHEERS :))
+{newline.join(f"Number of {product_name}: {quantity}" for product_name, quantity in cancelled_shopping_list[1])}
+
+Thank you for using TrolleyTravellers!'''
+
+    mail.send(msg)
     order_schema = OrderSchema()
     return order_schema.jsonify(current_order)
+
 
 #@orders.route('/order_cancelled/<token>', methods=['GET', 'POST'])
 def cancellation_token(token):
@@ -199,7 +228,7 @@ def cancellation_token(token):
         abort(403)
     return current_customer_token
 
-
+#[{"order_id" : "3", "token" : "eyJhbGciOiJIUzUxMiIsImlhdCI6MTYxNzg4MTQ0MywiZXhwIjoxNjE3ODgyMDQzfQ.eyJjdXN0b21lcl9pZCI6NTJ9.pziGFvw6Z0py64xyayOX6UF4Tm0bsrrrHWG2Rhw9OL1Jxzg_A8YAJCO7KwMoLXPCNTzGvGOKH8rroRasOlexKg"}]
 
 # @orders.route('/create_shopping_list', methods=['POST'])
 # def add_product():
@@ -243,7 +272,7 @@ def cancellation_token(token):
     #     abort(400)
 
         # {"product_names": ["Yucca", "Rhubarb","Yucca"]}
-        #{"product_names": ["Whmis Spray Bottle Graduated", "Yucca", "Yucca"]}
+        #{"customer_id" : "51", "product_names": ["Whmis Spray Bottle Graduated", "Yucca", "Yucca"]}
 
         #ORDER (Assertion for SHOPPING LIST AND PRODUCT LIST)
         ##list of items in shopping basket
