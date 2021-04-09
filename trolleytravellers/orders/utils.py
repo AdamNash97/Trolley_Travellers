@@ -97,7 +97,6 @@ def send_volunteer_unavailable_email(current_customer):
     msg = Message('Volunteers Unavailable',
                   sender='trolleytravellers@gmail.com',
                   recipients=[current_customer.email])
-    newline = "\n"
 
     msg.body = f'''
 Hi {current_customer.username}!
@@ -179,4 +178,4 @@ def create_new_order_products(new_product_ids, shopping_list, new_order):
             db.session.commit()
             new_order_id = new_order_product.order_id
             new_product_ids.append(new_order_product.product_id)
-    return (order_id, new_order_id, new_product_ids, new_order_id)
+    return (order_id, new_order_id, new_product_ids)

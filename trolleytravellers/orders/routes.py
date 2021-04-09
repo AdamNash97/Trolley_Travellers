@@ -145,8 +145,6 @@ def place_order_and_find_volunteer():
         db.session.commit()
         #current_order = Order.query.get(new_order.id)
         shopping_list = create_shopping_list()
-        global new_order_id
-        global new_order_ids
         new_product_ids = []
         order_id = new_order.id 
         values = create_new_order_products(new_product_ids, shopping_list, new_order)
