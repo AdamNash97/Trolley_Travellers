@@ -124,8 +124,7 @@ def delete_order(id):
         abort(404)
 
 """
-Super route which generates a volunteer-customer match AND creates an order AND sends emails to the 
-parties involved to let them know about their order.
+Super route which generates a volunteer-customer match AND creates an order containing products.
 """
 @orders.route('/place_order_and_find_volunteer', methods=['POST'])
 def place_order_and_find_volunteer():
@@ -133,33 +132,36 @@ def place_order_and_find_volunteer():
         order_date = get_current_date_as_string()
         customer_id = request.json['customer_id']
         volunteer_id = find_volunteer_match(int(customer_id))
-        #If there's no volunteer currently available:
+        #If there's no volunteer currently available in that area:
         current_customer = Customer.query.get(int(customer_id))
         if volunteer_id == 0:
             send_volunteer_unavailable_email(current_customer)
-        #Set engaged status to true for matched volunteer
+        #Set engaged status to true for matched volunteer:
         (Volunteer.query.get(int(volunteer_id))).engaged = 1
+        #Set order status to pending:
         status = Status.PENDING
+        #Open order request with no items in it currently:
         new_order = Order(order_date=order_date, customer_id=customer_id, volunteer_id=volunteer_id, status=status)
         db.session.add(new_order)
         db.session.commit()
-        #current_order = Order.query.get(new_order.id)
+        #Add items to order request:
         shopping_list = create_shopping_list()
         new_product_ids = []
         order_id = new_order.id 
         values = create_new_order_products(new_product_ids, shopping_list, new_order)
-        #new order product here will contain products
+        #Send email alerts to relevant customer and volunteer with order details:
         send_customer_confirmed_email(current_customer, order_id, status, volunteer_id, shopping_list)
         send_volunteer_confirmed_email(volunteer_id, shopping_list)
         order_product_schema = OrderProductSchema(many=True)
         new_orders_products = []
+        #Print out orderproduct table contents as JSON:
         for new_product_id in values[2]:
             new_orders_products.append(OrderProduct.query.get(  ( int(values[1]), int(new_product_id) )  ))
         output = order_product_schema.dump(new_orders_products)
         token = current_customer.get_cancellation_token()
         return jsonify([{'Receipt' : output}, {'Token' : token}])
     except:
-         abort(400)
+        abort(400)
 
 # Mark order as completed by order_id using json input body
 @orders.route('/order_completed', methods=['PUT'])
